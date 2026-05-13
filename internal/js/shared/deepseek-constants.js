@@ -6,15 +6,18 @@ const path = require('path');
 const DEFAULT_CLIENT = Object.freeze({
   name: 'DeepSeek',
   platform: 'android',
-  androidApiLevel: '35',
+  androidApiLevel: '36',
   locale: 'zh_CN',
 });
 
 const DEFAULT_BASE_HEADERS = Object.freeze({
   Host: 'chat.deepseek.com',
   Accept: 'application/json',
+  'Accept-Encoding': 'gzip',
   'Content-Type': 'application/json',
   'accept-charset': 'UTF-8',
+  'x-client-bundle-id': 'com.deepseek.chat',
+  'x-client-timezone-offset': '28800',
 });
 
 const DEFAULT_SKIP_PATTERNS = Object.freeze([

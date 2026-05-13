@@ -64,9 +64,13 @@ func (c *Client) streamPostWithFallback(ctx context.Context, doer trans.Doer, ur
 			for k, v := range headers {
 				req2.Header.Set(k, v)
 			}
-			return clients.fallbackS.Do(req2)
+			resp, err = clients.fallbackS.Do(req2)
+			if err != nil {
+				return nil, err
+			}
+			return decodeStreamingResponse(resp)
 		}
 		return nil, err
 	}
-	return resp, nil
+	return decodeStreamingResponse(resp)
 }

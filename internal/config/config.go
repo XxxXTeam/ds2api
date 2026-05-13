@@ -17,6 +17,7 @@ type Config struct {
 	Runtime           RuntimeConfig           `json:"runtime,omitempty"`
 	Responses         ResponsesConfig         `json:"responses,omitempty"`
 	Embeddings        EmbeddingsConfig        `json:"embeddings,omitempty"`
+	DeepSeek          DeepSeekConfig          `json:"deepseek,omitempty"`
 	AutoDelete        AutoDeleteConfig        `json:"auto_delete"`
 	CurrentInputFile  CurrentInputFileConfig  `json:"current_input_file,omitempty"`
 	ThinkingInjection ThinkingInjectionConfig `json:"thinking_injection,omitempty"`
@@ -99,6 +100,7 @@ func (c *Config) NormalizeCredentials() {
 		c.Accounts[i].Name = strings.TrimSpace(c.Accounts[i].Name)
 		c.Accounts[i].Remark = strings.TrimSpace(c.Accounts[i].Remark)
 	}
+	c.DeepSeek.RangersID = strings.TrimSpace(c.DeepSeek.RangersID)
 
 	c.Vercel = NormalizeVercelConfig(c.Vercel)
 	c.normalizeModelAliases()
@@ -161,6 +163,10 @@ type ResponsesConfig struct {
 
 type EmbeddingsConfig struct {
 	Provider string `json:"provider,omitempty"`
+}
+
+type DeepSeekConfig struct {
+	RangersID string `json:"rangers_id,omitempty"`
 }
 
 type AutoDeleteConfig struct {

@@ -51,12 +51,25 @@ func TestApplyProxyConnectivityHeadersUsesBaseHeaders(t *testing.T) {
 		t.Fatalf("http.NewRequest returned error: %v", err)
 	}
 
-	applyProxyConnectivityHeaders(req)
+	applyProxyConnectivityHeaders(req, (&Client{}).baseHeaders())
 
 	for key, want := range dsprotocol.BaseHeaders {
 		if got := req.Header.Get(key); got != want {
 			t.Fatalf("expected header %q=%q, got %q", key, want, got)
 		}
+	}
+}
+
+func TestBaseHeadersAddsRangersIDFromEnv(t *testing.T) {
+	t.Setenv("DS2API_DEEPSEEK_RANGERS_ID", " rangers-123 ")
+
+	headers := (&Client{}).baseHeaders()
+
+	if got := headers["x-rangers-id"]; got != "rangers-123" {
+		t.Fatalf("expected x-rangers-id from env, got %q", got)
+	}
+	if _, ok := dsprotocol.BaseHeaders["x-rangers-id"]; ok {
+		t.Fatal("x-rangers-id must not be part of static BaseHeaders")
 	}
 }
 

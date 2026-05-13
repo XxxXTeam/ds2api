@@ -44,3 +44,21 @@ func TestStoreThinkingInjectionAccessors(t *testing.T) {
 		t.Fatalf("thinking injection prompt=%q want custom thinking prompt", got)
 	}
 }
+
+func TestStoreDeepSeekRangersIDUsesConfigBeforeEnv(t *testing.T) {
+	t.Setenv("DS2API_DEEPSEEK_RANGERS_ID", "env-rangers")
+	store := &Store{cfg: Config{DeepSeek: DeepSeekConfig{RangersID: " config-rangers "}}}
+
+	if got := store.DeepSeekRangersID(); got != "config-rangers" {
+		t.Fatalf("DeepSeekRangersID=%q want config-rangers", got)
+	}
+}
+
+func TestStoreDeepSeekRangersIDFallsBackToEnv(t *testing.T) {
+	t.Setenv("DS2API_DEEPSEEK_RANGERS_ID", " env-rangers ")
+	store := &Store{cfg: Config{}}
+
+	if got := store.DeepSeekRangersID(); got != "env-rangers" {
+		t.Fatalf("DeepSeekRangersID=%q want env-rangers", got)
+	}
+}

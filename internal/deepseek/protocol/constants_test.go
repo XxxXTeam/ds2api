@@ -27,6 +27,15 @@ func TestSharedConstantsLoaded(t *testing.T) {
 	if BaseHeaders["Content-Type"] != "application/json" {
 		t.Fatalf("unexpected base header Content-Type=%q", BaseHeaders["Content-Type"])
 	}
+	if BaseHeaders["Accept-Encoding"] != "gzip" {
+		t.Fatalf("unexpected base header Accept-Encoding=%q", BaseHeaders["Accept-Encoding"])
+	}
+	if BaseHeaders["x-client-bundle-id"] != "com.deepseek.chat" {
+		t.Fatalf("unexpected base header x-client-bundle-id=%q", BaseHeaders["x-client-bundle-id"])
+	}
+	if BaseHeaders["x-client-timezone-offset"] != "28800" {
+		t.Fatalf("unexpected base header x-client-timezone-offset=%q", BaseHeaders["x-client-timezone-offset"])
+	}
 	if len(SkipContainsPatterns) == 0 {
 		t.Fatal("expected skip contains patterns to be loaded")
 	}

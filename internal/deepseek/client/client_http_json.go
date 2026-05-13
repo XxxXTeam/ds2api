@@ -23,9 +23,13 @@ func (c *Client) postJSON(ctx context.Context, doer trans.Doer, fallback trans.D
 }
 
 func (c *Client) postJSONWithStatus(ctx context.Context, doer trans.Doer, fallback trans.Doer, url string, headers map[string]string, payload any) (map[string]any, int, error) {
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return nil, 0, err
+	var b []byte
+	var err error
+	if payload != nil {
+		b, err = json.Marshal(payload)
+		if err != nil {
+			return nil, 0, err
+		}
 	}
 	headers = c.jsonHeaders(headers)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(b))

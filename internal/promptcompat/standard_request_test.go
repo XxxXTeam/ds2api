@@ -43,6 +43,12 @@ func TestStandardRequestCompletionPayloadSetsModelTypeFromResolvedModel(t *testi
 			if got := payload["search_enabled"]; got != tc.search {
 				t.Fatalf("unexpected search_enabled: %#v", got)
 			}
+			if got := payload["audio_id"]; got != nil {
+				t.Fatalf("expected audio_id nil, got %#v", got)
+			}
+			if got := payload["preempt"]; got != false {
+				t.Fatalf("expected preempt false, got %#v", got)
+			}
 			if got := payload["temperature"]; got != 0.3 {
 				t.Fatalf("expected passthrough temperature, got %#v", got)
 			}

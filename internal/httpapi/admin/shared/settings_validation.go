@@ -12,6 +12,7 @@ func normalizeSettingsConfig(c *config.Config) {
 	}
 	c.Admin.PasswordHash = strings.TrimSpace(c.Admin.PasswordHash)
 	c.Embeddings.Provider = strings.TrimSpace(c.Embeddings.Provider)
+	c.DeepSeek.RangersID = strings.TrimSpace(c.DeepSeek.RangersID)
 }
 
 func NormalizeSettingsConfig(c *config.Config) {

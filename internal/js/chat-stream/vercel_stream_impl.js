@@ -51,6 +51,7 @@ async function handleVercelStream(req, res, rawBody, payload) {
   const leaseID = asString(prep.body.lease_id);
   let deepseekToken = asString(prep.body.deepseek_token);
   const initialPowHeader = asString(prep.body.pow_header);
+  const deepseekHeaders = normalizeHeaderObject(prep.body.deepseek_headers);
   let completionPayload = prep.body.payload && typeof prep.body.payload === 'object' ? prep.body.payload : null;
   const finalPrompt = asString(prep.body.final_prompt);
   const thinkingEnabled = toBool(prep.body.thinking_enabled);
@@ -120,6 +121,7 @@ async function handleVercelStream(req, res, rawBody, payload) {
           method: 'POST',
           headers: {
             ...BASE_HEADERS,
+            ...deepseekHeaders,
             authorization: `Bearer ${deepseekToken}`,
             'x-ds-pow-response': powHeader,
           },
@@ -434,6 +436,7 @@ async function handleVercelStream(req, res, rawBody, payload) {
             completionPayload = switched.body.payload;
             deepseekToken = asString(switched.body.deepseek_token) || deepseekToken;
             currentPowHeader = asString(switched.body.pow_header) || currentPowHeader;
+            Object.assign(deepseekHeaders, normalizeHeaderObject(switched.body.deepseek_headers));
             activeDeepSeekSessionID = asString(switched.body.session_id) || activeDeepSeekSessionID;
             usagePrompt = finalPrompt;
             completionRes = await fetchCompletion(completionPayload);
@@ -484,6 +487,23 @@ async function handleVercelStream(req, res, rawBody, payload) {
 
 function toBool(v) {
   return v === true;
+}
+
+function normalizeHeaderObject(value) {
+  const headers = {};
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return headers;
+  }
+  for (const [key, rawValue] of Object.entries(value)) {
+    if (typeof key !== 'string' || key.trim() === '') {
+      continue;
+    }
+    if (typeof rawValue !== 'string' || rawValue.trim() === '') {
+      continue;
+    }
+    headers[key] = rawValue;
+  }
+  return headers;
 }
 
 function clonePayloadForEmptyOutputRetry(payload, parentMessageID) {

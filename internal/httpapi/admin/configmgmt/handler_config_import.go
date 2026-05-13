@@ -94,6 +94,9 @@ func (h *Handler) configImport(w http.ResponseWriter, r *http.Request) {
 			if strings.TrimSpace(incoming.Embeddings.Provider) != "" {
 				next.Embeddings.Provider = incoming.Embeddings.Provider
 			}
+			if strings.TrimSpace(incoming.DeepSeek.RangersID) != "" {
+				next.DeepSeek.RangersID = incoming.DeepSeek.RangersID
+			}
 			incomingVercel := config.NormalizeVercelConfig(incoming.Vercel)
 			if strings.TrimSpace(incomingVercel.Token) != "" || strings.TrimSpace(incomingVercel.ProjectID) != "" || strings.TrimSpace(incomingVercel.TeamID) != "" {
 				next.Vercel = incomingVercel

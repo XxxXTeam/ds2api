@@ -44,6 +44,23 @@ func (s *Store) EmbeddingsProvider() string {
 	return strings.TrimSpace(s.cfg.Embeddings.Provider)
 }
 
+func DeepSeekRangersIDFromEnv() string {
+	return strings.TrimSpace(os.Getenv("DS2API_DEEPSEEK_RANGERS_ID"))
+}
+
+func (s *Store) DeepSeekRangersID() string {
+	if s == nil {
+		return DeepSeekRangersIDFromEnv()
+	}
+	s.mu.RLock()
+	value := strings.TrimSpace(s.cfg.DeepSeek.RangersID)
+	s.mu.RUnlock()
+	if value != "" {
+		return value
+	}
+	return DeepSeekRangersIDFromEnv()
+}
+
 func (s *Store) AutoDeleteMode() string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

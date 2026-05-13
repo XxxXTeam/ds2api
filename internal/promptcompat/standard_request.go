@@ -77,9 +77,11 @@ func (r StandardRequest) CompletionPayload(sessionID string) map[string]any {
 		refFileIDs = append(refFileIDs, fileID)
 	}
 	payload := map[string]any{
+		"audio_id":          nil,
 		"chat_session_id":   sessionID,
 		"model_type":        modelType,
 		"parent_message_id": nil,
+		"preempt":           false,
 		"prompt":            r.FinalPrompt,
 		"ref_file_ids":      refFileIDs,
 		"thinking_enabled":  r.Thinking,

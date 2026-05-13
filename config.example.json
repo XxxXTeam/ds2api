@@ -57,6 +57,9 @@
   "embeddings": {
     "provider": "deterministic"
   },
+  "deepseek": {
+    "rangers_id": ""
+  },
   "admin": {
     "jwt_expire_hours": 24
   },

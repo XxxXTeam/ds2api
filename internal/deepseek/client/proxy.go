@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	dsprotocol "ds2api/internal/deepseek/protocol"
 	"fmt"
 	"net"
 	"net/http"
@@ -169,11 +168,14 @@ func (c *Client) requestClientsForAccount(acc config.Account) requestClients {
 	return bundle
 }
 
-func applyProxyConnectivityHeaders(req *http.Request) {
+func applyProxyConnectivityHeaders(req *http.Request, headers map[string]string) {
 	if req == nil {
 		return
 	}
-	for key, value := range dsprotocol.BaseHeaders {
+	if headers == nil {
+		headers = (&Client{}).baseHeaders()
+	}
+	for key, value := range headers {
 		key = strings.TrimSpace(key)
 		value = strings.TrimSpace(value)
 		if key == "" || value == "" {
@@ -220,7 +222,7 @@ func TestProxyConnectivity(ctx context.Context, proxyCfg config.Proxy) map[strin
 		result["message"] = err.Error()
 		return result
 	}
-	applyProxyConnectivityHeaders(req)
+	applyProxyConnectivityHeaders(req, (&Client{}).baseHeaders())
 
 	resp, err := client.Do(req)
 	result["response_time"] = int(time.Since(start).Milliseconds())

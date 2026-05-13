@@ -331,6 +331,7 @@ go run ./cmd/ds2api
 
 - `keys` / `api_keys`：客户端访问密钥，`api_keys` 支持 `name` 与 `remark` 元信息，`keys` 继续兼容。
 - `accounts`：DeepSeek 托管账号，支持 `email` 或 `mobile` 登录，可配置代理、名称和备注。
+- `deepseek.rangers_id`：可选 Android 设备埋点 ID，会作为 `x-rangers-id` 发往 DeepSeek；为空时读取 `DS2API_DEEPSEEK_RANGERS_ID`，两者都为空则不发送该请求头。
 - `model_aliases`：OpenAI / Claude / Gemini 共用的模型 alias 映射。
 - `runtime`：账号并发、队列与 token 刷新策略，可通过 Admin Settings 热更新。
 - `auto_delete.mode`：请求结束后的远端会话清理策略，支持 `none` / `single` / `all`。

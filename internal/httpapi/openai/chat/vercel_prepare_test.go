@@ -96,6 +96,7 @@ func TestStreamLeaseTTL(t *testing.T) {
 func TestHandleVercelStreamPrepareAppliesCurrentInputFile(t *testing.T) {
 	t.Setenv("VERCEL", "1")
 	t.Setenv("DS2API_VERCEL_INTERNAL_SECRET", "stream-secret")
+	t.Setenv("DS2API_DEEPSEEK_RANGERS_ID", "rangers-env")
 
 	ds := &inlineUploadDSStub{}
 	h := &Handler{
@@ -144,6 +145,13 @@ func TestHandleVercelStreamPrepareAppliesCurrentInputFile(t *testing.T) {
 	refIDs, _ := payload["ref_file_ids"].([]any)
 	if len(refIDs) == 0 || refIDs[0] != "file-inline-1" {
 		t.Fatalf("expected uploaded history file first in ref_file_ids, got %#v", payload["ref_file_ids"])
+	}
+	headers, _ := body["deepseek_headers"].(map[string]any)
+	if headers["x-rangers-id"] != "rangers-env" {
+		t.Fatalf("expected deepseek_headers x-rangers-id, got %#v", headers)
+	}
+	if headers["x-client-version"] != "2.1.0" {
+		t.Fatalf("expected Android client version header, got %#v", headers)
 	}
 }
 
@@ -423,6 +431,7 @@ func TestHandleVercelStreamPrepareMapsCurrentInputFileManagedAuthFailureTo401(t 
 func TestHandleVercelStreamSwitchReuploadsCurrentInputFile(t *testing.T) {
 	t.Setenv("VERCEL", "1")
 	t.Setenv("DS2API_VERCEL_INTERNAL_SECRET", "stream-secret")
+	t.Setenv("DS2API_DEEPSEEK_RANGERS_ID", "rangers-switch")
 	t.Setenv("DS2API_CONFIG_JSON", `{
 		"keys":["managed-key"],
 		"accounts":[
@@ -493,6 +502,10 @@ func TestHandleVercelStreamSwitchReuploadsCurrentInputFile(t *testing.T) {
 	}
 	if body["deepseek_token"] != "token-acc2@test.com" {
 		t.Fatalf("expected switched account token, got %#v", body["deepseek_token"])
+	}
+	headers, _ := body["deepseek_headers"].(map[string]any)
+	if headers["x-rangers-id"] != "rangers-switch" {
+		t.Fatalf("expected switched deepseek_headers x-rangers-id, got %#v", headers)
 	}
 	payload, _ := body["payload"].(map[string]any)
 	refIDs, _ := payload["ref_file_ids"].([]any)

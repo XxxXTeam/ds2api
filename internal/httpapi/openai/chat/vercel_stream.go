@@ -11,6 +11,7 @@ import (
 
 	"ds2api/internal/auth"
 	"ds2api/internal/config"
+	dsprotocol "ds2api/internal/deepseek/protocol"
 	"ds2api/internal/httpapi/openai/history"
 	"ds2api/internal/promptcompat"
 	"ds2api/internal/util"
@@ -112,6 +113,7 @@ func (h *Handler) handleVercelStreamPrepare(w http.ResponseWriter, r *http.Reque
 		"search_enabled":   stdReq.Search,
 		"tool_names":       stdReq.ToolNames,
 		"deepseek_token":   a.DeepSeekToken,
+		"deepseek_headers": deepSeekHeadersForStore(h.Store),
 		"pow_header":       powHeader,
 		"payload":          payload,
 	})
@@ -262,9 +264,31 @@ func (h *Handler) handleVercelStreamSwitch(w http.ResponseWriter, r *http.Reques
 		"search_enabled":   stdReq.Search,
 		"tool_names":       stdReq.ToolNames,
 		"deepseek_token":   a.DeepSeekToken,
+		"deepseek_headers": deepSeekHeadersForStore(h.Store),
 		"pow_header":       powHeader,
 		"payload":          stdReq.CompletionPayload(sessionID),
 	})
+}
+
+type deepSeekRangersIDReader interface {
+	DeepSeekRangersID() string
+}
+
+func deepSeekHeadersForStore(store any) map[string]string {
+	headers := map[string]string{}
+	for k, v := range dsprotocol.BaseHeaders {
+		headers[k] = v
+	}
+	rangersID := config.DeepSeekRangersIDFromEnv()
+	if reader, ok := store.(deepSeekRangersIDReader); ok {
+		if value := strings.TrimSpace(reader.DeepSeekRangersID()); value != "" {
+			rangersID = value
+		}
+	}
+	if strings.TrimSpace(rangersID) != "" {
+		headers["x-rangers-id"] = strings.TrimSpace(rangersID)
+	}
+	return headers
 }
 
 func isVercelStreamPrepareRequest(r *http.Request) bool {

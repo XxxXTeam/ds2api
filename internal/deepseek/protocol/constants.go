@@ -23,10 +23,13 @@ const (
 )
 
 var defaultStaticBaseHeaders = map[string]string{
-	"Host":           "chat.deepseek.com",
-	"Accept":         "application/json",
-	"Content-Type":   "application/json",
-	"accept-charset": "UTF-8",
+	"Host":                     "chat.deepseek.com",
+	"Accept":                   "application/json",
+	"Accept-Encoding":          "gzip",
+	"Content-Type":             "application/json",
+	"accept-charset":           "UTF-8",
+	"x-client-bundle-id":       "com.deepseek.chat",
+	"x-client-timezone-offset": "28800",
 }
 
 var defaultSkipContainsPatterns = []string{
@@ -97,7 +100,7 @@ func normalizeClientConstants(in clientConstants) clientConstants {
 		in.Platform = "android"
 	}
 	if in.AndroidAPILevel == "" {
-		in.AndroidAPILevel = "35"
+		in.AndroidAPILevel = "36"
 	}
 	if in.Locale == "" {
 		in.Locale = "zh_CN"

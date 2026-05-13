@@ -319,6 +319,7 @@ Common fields:
 
 - `keys` / `api_keys`: client API keys; `api_keys` adds `name` and `remark` metadata while `keys` remains compatible.
 - `accounts`: managed DeepSeek accounts, supporting `email` or `mobile` login plus proxy/name/remark metadata.
+- `deepseek.rangers_id`: optional Android device telemetry ID sent as `x-rangers-id`; if empty, `DS2API_DEEPSEEK_RANGERS_ID` is used, and if both are empty the header is omitted.
 - `model_aliases`: one shared alias map for OpenAI / Claude / Gemini model names.
 - `runtime`: account concurrency, queueing, and token refresh behavior, hot-reloadable via Admin Settings.
 - `auto_delete.mode`: remote session cleanup after each request, supporting `none` / `single` / `all`.
