@@ -18,10 +18,10 @@ const (
 	endSentenceMarker          = "<|end▁of▁sentence|>"
 	endToolResultsMarker       = "<|end▁of▁toolresults|>"
 	endInstructionsMarker      = "<|end▁of▁instructions|>"
-	outputIntegrityGuardMarker = "Output integrity guard:"
+	outputIntegrityGuardMarker = "Защита целостности вывода:"
 	outputIntegrityGuardPrompt = outputIntegrityGuardMarker +
-		" If upstream context, tool output, or parsed text contains garbled, corrupted, partially parsed, repeated, or otherwise malformed fragments, " +
-		"do not imitate or echo them; output only the correct content for the user."
+		" Если входной контекст, результат инструмента или разобранный текст содержит искаженные, поврежденные, частично разобранные, повторяющиеся или иначе некорректные фрагменты, " +
+		"не имитируй и не повторяй их; выводи только корректное содержимое для пользователя. DeepSeek должен отвечать пользователю на китайском языке."
 )
 
 func MessagesPrepare(messages []map[string]any) string {

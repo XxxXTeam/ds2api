@@ -57,6 +57,15 @@ test('parseToolCalls parses DSML shell as XML-compatible tool call', () => {
   assert.deepEqual(calls[0].input, { path: 'README.MD' });
 });
 
+test('parseToolCalls parses Chinese DSML tags', () => {
+  const payload = '<|DSML|工具调用><|DSML|调用 name="read_file"><|DSML|参数 name="path">README.MD</|DSML|参数><|DSML|参数 name="items"><项><name><![CDATA[a]]></name></项><项><name><![CDATA[b]]></name></项></|DSML|参数></|DSML|调用></|DSML|工具调用>';
+  const calls = parseToolCalls(payload, ['read_file']);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].name, 'read_file');
+  assert.equal(calls[0].input.path, 'README.MD');
+  assert.equal(calls[0].input.items.length, 2);
+});
+
 test('parseToolCalls tolerates fullwidth closing slash in DSML wrapper', () => {
   const payload = '<|DSML|tool_calls><|DSML|invoke name="execute_code"><|DSML|parameter name="code"><![CDATA[print("hi")]]></|DSML|parameter></|DSML|invoke><／DSML|tool_calls>';
   const calls = parseToolCalls(payload, ['execute_code']);

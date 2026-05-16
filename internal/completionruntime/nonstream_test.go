@@ -160,7 +160,7 @@ func TestExecuteNonStreamWithRetrySwitchesManagedAccountBeforeFinal429(t *testin
 	if got := ds.payloads[2]["chat_session_id"]; got != "session-acc2@test.com" {
 		t.Fatalf("switched payload session mismatch: %#v", got)
 	}
-	if prompt, _ := ds.payloads[2]["prompt"].(string); strings.Contains(prompt, "Previous reply had no visible output") {
+	if prompt, _ := ds.payloads[2]["prompt"].(string); strings.Contains(prompt, "Предыдущий ответ не содержал видимого вывода") {
 		t.Fatalf("expected fresh switched-account prompt without empty-output suffix, got %q", prompt)
 	}
 }
@@ -312,7 +312,7 @@ func TestStartCompletionAppliesCurrentInputFileGlobally(t *testing.T) {
 		t.Fatalf("expected uploaded file id in ref_file_ids, got %#v", ds.payloads[0]["ref_file_ids"])
 	}
 	prompt, _ := ds.payloads[0]["prompt"].(string)
-	if !strings.Contains(prompt, "Continue from the latest state in the attached DS2API_HISTORY.txt context.") {
+	if !strings.Contains(prompt, "Продолжай с последнего состояния из приложенного контекста DS2API_HISTORY.txt.") {
 		t.Fatalf("expected continuation prompt, got %q", prompt)
 	}
 	if !start.Request.CurrentInputFileApplied || !strings.Contains(start.Request.PromptTokenText, "# DS2API_HISTORY.txt") {

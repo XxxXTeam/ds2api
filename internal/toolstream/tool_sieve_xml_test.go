@@ -73,6 +73,37 @@ func TestProcessToolSieveInterceptsDSMLToolCallWithoutLeak(t *testing.T) {
 	}
 }
 
+func TestProcessToolSieveInterceptsChineseDSMLToolCallWithoutLeak(t *testing.T) {
+	var state State
+	chunks := []string{
+		"<|DSML|工具",
+		"调用>\n",
+		`  <|DSML|调用 name="read_file">` + "\n",
+		`    <|DSML|参数 name="path">README.MD</|DSML|参数>` + "\n",
+		"  </|DSML|调用>\n",
+		"</|DSML|工具调用>",
+	}
+	var events []Event
+	for _, c := range chunks {
+		events = append(events, ProcessChunk(&state, c, []string{"read_file"})...)
+	}
+	events = append(events, Flush(&state, []string{"read_file"})...)
+
+	var textContent string
+	var toolCalls int
+	for _, evt := range events {
+		textContent += evt.Content
+		toolCalls += len(evt.ToolCalls)
+	}
+
+	if strings.Contains(textContent, "工具调用") || strings.Contains(textContent, "read_file") {
+		t.Fatalf("Chinese DSML tool call content leaked to text: %q", textContent)
+	}
+	if toolCalls != 1 {
+		t.Fatalf("expected one Chinese DSML tool call, got %d events=%#v", toolCalls, events)
+	}
+}
+
 func TestProcessToolSieveInterceptsDSMLTrailingPipeToolCallWithoutLeak(t *testing.T) {
 	var state State
 	chunks := []string{

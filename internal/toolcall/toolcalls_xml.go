@@ -120,7 +120,8 @@ func parseXMLNodeValue(dec *xml.Decoder, start xml.StartElement) (any, error) {
 				}
 			}
 			if len(children) == 1 {
-				if items, ok := children["item"]; ok {
+				if itemKey, ok := onlyXMLItemKey(children); ok {
+					items := children[itemKey]
 					switch v := items.(type) {
 					case []any:
 						return v, nil
@@ -131,6 +132,24 @@ func parseXMLNodeValue(dec *xml.Decoder, start xml.StartElement) (any, error) {
 			}
 			return children, nil
 		}
+	}
+}
+
+func onlyXMLItemKey(children map[string]any) (string, bool) {
+	for key := range children {
+		if isXMLItemName(key) {
+			return key, true
+		}
+	}
+	return "", false
+}
+
+func isXMLItemName(name string) bool {
+	switch strings.ToLower(strings.TrimSpace(name)) {
+	case "item", "项":
+		return true
+	default:
+		return false
 	}
 }
 

@@ -3,10 +3,13 @@
 const CDATA_PATTERN = /^(?:<|〈)(?:!|！)\[CDATA\[([\s\S]*?)]](?:>|＞|〉)$/i;
 const XML_ATTR_PATTERN = /\b([a-z0-9_:-]+)\s*=\s*("([^"]*)"|'([^']*)')/gi;
 const TOOL_MARKUP_NAMES = [
+  { raw: '工具调用', canonical: 'tool_calls' },
   { raw: 'tool_calls', canonical: 'tool_calls' },
   { raw: 'tool-calls', canonical: 'tool_calls', dsmlOnly: true },
   { raw: 'toolcalls', canonical: 'tool_calls', dsmlOnly: true },
+  { raw: '调用', canonical: 'invoke' },
   { raw: 'invoke', canonical: 'invoke' },
+  { raw: '参数', canonical: 'parameter' },
   { raw: 'parameter', canonical: 'parameter' },
 ];
 
@@ -975,6 +978,12 @@ function consumeToolMarkupPrefixSegment(raw, idx) {
 
 function hasToolMarkupNamePrefix(raw, start) {
   for (const name of TOOL_MARKUP_NAMES) {
+    if (!isASCIIToolKeyword(name.raw)) {
+      if (hasExactToolKeywordPrefixAt(raw, start, name.raw)) {
+        return true;
+      }
+      continue;
+    }
     if (consumeToolKeyword(raw, start, name.raw).ok) {
       return true;
     }
@@ -983,6 +992,29 @@ function hasToolMarkupNamePrefix(raw, start) {
     }
   }
   return false;
+}
+
+function hasExactToolKeywordPrefixAt(text, start, keyword) {
+  const raw = toStringSafe(text);
+  if (start < 0 || start >= raw.length) {
+    return false;
+  }
+  let idx = start;
+  let matched = 0;
+  for (const want of toStringSafe(keyword)) {
+    idx = skipToolMarkupIgnorables(raw, idx);
+    if (idx >= raw.length) {
+      return matched > 0;
+    }
+    const cp = raw.codePointAt(idx);
+    const got = String.fromCodePoint(cp);
+    if (got !== want) {
+      return false;
+    }
+    idx += got.length;
+    matched += 1;
+  }
+  return matched > 0;
 }
 
 function hasConfusablePartialKeywordPrefix(raw, start, keyword) {
@@ -1370,6 +1402,9 @@ function toolMarkupUnderscoreLenAt(text, idx) {
 
 function consumeToolKeyword(text, idx, keyword) {
   const raw = toStringSafe(text);
+  if (!isASCIIToolKeyword(keyword)) {
+    return consumeExactToolKeyword(raw, idx, keyword);
+  }
   let next = idx;
   for (const ch of keyword.toLowerCase()) {
     next = skipToolMarkupIgnorables(raw, next);
@@ -1398,6 +1433,28 @@ function consumeToolKeyword(text, idx, keyword) {
       return { next: idx, ok: false };
     }
     next += cp > 0xFFFF ? 2 : 1;
+  }
+  return { next, ok: true };
+}
+
+function isASCIIToolKeyword(keyword) {
+  return /^[\x00-\x7F]*$/.test(toStringSafe(keyword));
+}
+
+function consumeExactToolKeyword(text, idx, keyword) {
+  const raw = toStringSafe(text);
+  let next = idx;
+  for (const want of toStringSafe(keyword)) {
+    next = skipToolMarkupIgnorables(raw, next);
+    if (next >= raw.length) {
+      return { next: idx, ok: false };
+    }
+    const gotCodePoint = raw.codePointAt(next);
+    const got = String.fromCodePoint(gotCodePoint);
+    if (got !== want) {
+      return { next: idx, ok: false };
+    }
+    next += got.length;
   }
   return { next, ok: true };
 }
@@ -1821,7 +1878,7 @@ function findGenericXmlStartTagOutsideCDATA(text, from) {
       i += 1;
       continue;
     }
-    const match = text.slice(i + 1).match(/^([A-Za-z_][A-Za-z0-9_.:-]*)/);
+    const match = text.slice(i + 1).match(/^([\p{L}_][\p{L}\p{N}_.:-]*)/u);
     if (!match) {
       i += 1;
       continue;
@@ -1986,7 +2043,7 @@ function cdataFragmentLooksExplicitlyStructured(raw) {
     return true;
   }
   const block = blocks[0];
-  if (toStringSafe(block.localName).trim().toLowerCase() === 'item') {
+  if (isXmlItemName(block.localName)) {
     return true;
   }
   return findGenericXmlElementBlocks(block.body).length > 0;
@@ -2019,8 +2076,8 @@ function unwrapItemOnlyMarkupValue(value) {
     return value;
   }
   const keys = Object.keys(value);
-  if (keys.length === 1 && keys[0] === 'item') {
-    const items = unwrapItemOnlyMarkupValue(value.item);
+  if (keys.length === 1 && isXmlItemName(keys[0])) {
+    const items = unwrapItemOnlyMarkupValue(value[keys[0]]);
     return Array.isArray(items) ? items : [items];
   }
   const out = {};
@@ -2201,8 +2258,9 @@ function coerceArrayValue(value, paramName = '') {
     return { ok: false, value: null };
   }
 
-  if (Object.prototype.hasOwnProperty.call(value, 'item')) {
-    const items = value.item;
+  const itemKey = keys.find(isXmlItemName);
+  if (itemKey) {
+    const items = value[itemKey];
     const nested = coerceArrayValue(items, '');
     return nested.ok ? nested : { ok: true, value: [items] };
   }
@@ -2215,6 +2273,11 @@ function coerceArrayValue(value, paramName = '') {
   }
 
   return { ok: false, value: null };
+}
+
+function isXmlItemName(name) {
+  const local = toStringSafe(name).trim().toLowerCase();
+  return local === 'item' || local === '项';
 }
 
 function splitTopLevelJSONValues(raw) {

@@ -15,7 +15,7 @@ test('chat history strict parser merges current input file placeholder', async (
   const item = {
     messages: [{
       role: 'user',
-      content: 'Continue from the latest state in the attached DS2API_HISTORY.txt context. Treat it as the current working state and answer the latest user request directly.',
+      content: 'Продолжай с последнего состояния из приложенного контекста DS2API_HISTORY.txt. Считай его текущим рабочим состоянием и напрямую отвечай на последний запрос пользователя на китайском языке.',
     }],
     history_text: [
       '<|begin▁of▁sentence|>',
@@ -67,11 +67,11 @@ test('chat history transcript parser replaces current input file placeholder', a
   const item = {
     messages: [{
       role: 'user',
-      content: 'Continue from the latest state in the attached DS2API_HISTORY.txt context. Treat it as the current working state and answer the latest user request directly.',
+      content: 'Продолжай с последнего состояния из приложенного контекста DS2API_HISTORY.txt. Считай его текущим рабочим состоянием и напрямую отвечай на последний запрос пользователя на китайском языке.',
     }],
     history_text: [
       '# DS2API_HISTORY.txt',
-      'Prior conversation history and tool progress.',
+      'Предыдущая история диалога и ход выполнения инструментов.',
       '',
       '=== 1. SYSTEM ===',
       'policy',

@@ -206,7 +206,7 @@ test('vercel stream retries empty output once and keeps one terminal frame', asy
   assert.equal(parsed[0].choices[0].delta.content, 'visible');
   assert.equal(parsed[1].choices[0].finish_reason, 'stop');
   assert.equal(parsed[0].id, parsed[1].id);
-  assert.match(completionBodies[1].prompt, /Previous reply had no visible output\. Please regenerate the visible final answer or tool call now\.$/);
+  assert.match(completionBodies[1].prompt, /Предыдущий ответ не содержал видимого вывода\./);
 });
 
 test('vercel stream retries thinking-only output once', async () => {
@@ -287,7 +287,7 @@ test('vercel stream switches managed account after empty retry exhaustion', asyn
     const parsed = frames.filter((frame) => frame !== '[DONE]').map((frame) => JSON.parse(frame));
     assert.equal(fetchURLs.filter((url) => url.includes('__stream_switch=1')).length, 1);
     assert.equal(completionBodies.length, 3);
-    assert.match(completionBodies[1].prompt, /Previous reply had no visible output/);
+    assert.match(completionBodies[1].prompt, /Предыдущий ответ не содержал видимого вывода/);
     assert.equal(completionBodies[1].parent_message_id, 41);
     assert.equal(completionBodies[2].prompt, 'hello');
     assert.deepEqual(completionBodies[2].ref_file_ids, ['file-2']);
@@ -343,7 +343,7 @@ test('vercel stream exhausts DeepSeek continue before synthetic retry', async ()
   assert.equal(fetchURLs.filter((url) => url.includes('__stream_pow=1')).length, 1);
   assert.equal(parsed[0].choices[0].delta.content, 'continued');
   assert.equal(parsed[1].choices[0].finish_reason, 'stop');
-  assert.equal(fetchBodies.some((body) => String(body.prompt || '').includes('Previous reply had no visible output')), false);
+  assert.equal(fetchBodies.some((body) => String(body.prompt || '').includes('Предыдущий ответ не содержал видимого вывода')), false);
 });
 
 test('vercel stream continues direct quasi_status incomplete before final tool call', async () => {

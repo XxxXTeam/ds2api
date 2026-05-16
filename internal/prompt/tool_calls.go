@@ -17,12 +17,12 @@ var promptXMLTextEscaper = strings.NewReplacer(
 var promptXMLNamePattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_.:-]*$`)
 
 const (
-	promptDSMLToolCallsOpen  = "<|DSML|tool_calls>"
-	promptDSMLToolCallsClose = "</|DSML|tool_calls>"
-	promptDSMLInvokeOpen     = "<|DSML|invoke"
-	promptDSMLInvokeClose    = "</|DSML|invoke>"
-	promptDSMLParameterOpen  = "<|DSML|parameter"
-	promptDSMLParameterClose = "</|DSML|parameter>"
+	promptDSMLToolCallsOpen  = "<|DSML|工具调用>"
+	promptDSMLToolCallsClose = "</|DSML|工具调用>"
+	promptDSMLInvokeOpen     = "<|DSML|调用"
+	promptDSMLInvokeClose    = "</|DSML|调用>"
+	promptDSMLParameterOpen  = "<|DSML|参数"
+	promptDSMLParameterClose = "</|DSML|参数>"
 )
 
 // FormatToolCallsForPrompt renders a tool_calls slice into the prompt-visible
@@ -150,7 +150,7 @@ func renderPromptToolParameters(value any, indent string) (string, bool) {
 	case []any:
 		lines := make([]string, 0, len(v))
 		for _, item := range v {
-			rendered, ok := renderPromptParameterNode("item", item, indent)
+			rendered, ok := renderPromptParameterNode("项", item, indent)
 			if !ok {
 				return "", false
 			}
@@ -225,11 +225,11 @@ func renderPromptToolXMLBody(value any, indent string) (string, bool) {
 	case []any:
 		return renderPromptToolXMLArray(v, indent)
 	case string:
-		return indent + "<content>" + renderPromptXMLText(v) + "</content>", true
+		return indent + "<内容>" + renderPromptXMLText(v) + "</内容>", true
 	case bool, float32, float64, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-		return indent + "<value>" + escapeXMLText(fmt.Sprint(v)) + "</value>", true
+		return indent + "<值>" + escapeXMLText(fmt.Sprint(v)) + "</值>", true
 	default:
-		return indent + "<value>" + renderPromptXMLText(fmt.Sprint(v)) + "</value>", true
+		return indent + "<值>" + renderPromptXMLText(fmt.Sprint(v)) + "</值>", true
 	}
 }
 
@@ -263,7 +263,7 @@ func renderPromptToolXMLArray(items []any, indent string) (string, bool) {
 	}
 	lines := make([]string, 0, len(items))
 	for _, item := range items {
-		rendered, ok := renderPromptToolXMLNode("item", item, indent)
+		rendered, ok := renderPromptToolXMLNode("项", item, indent)
 		if !ok {
 			return "", false
 		}
@@ -323,7 +323,13 @@ func renderPromptXMLText(text string) string {
 }
 
 func isValidPromptXMLName(name string) bool {
-	return promptXMLNamePattern.MatchString(strings.TrimSpace(name))
+	trimmed := strings.TrimSpace(name)
+	switch trimmed {
+	case "项":
+		return true
+	default:
+		return promptXMLNamePattern.MatchString(trimmed)
+	}
 }
 
 func escapeXMLAttribute(text string) string {

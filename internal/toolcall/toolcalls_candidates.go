@@ -390,6 +390,9 @@ func toolMarkupUnderscoreLenAt(text string, idx int) int {
 }
 
 func consumeToolKeyword(text string, idx int, keyword string) (int, bool) {
+	if !isASCIIToolKeyword(keyword) {
+		return consumeExactToolKeyword(text, idx, keyword)
+	}
 	next := idx
 	for i := 0; i < len(keyword); i++ {
 		next = skipToolMarkupIgnorables(text, next)
@@ -421,6 +424,31 @@ func consumeToolKeyword(text string, idx int, keyword string) (int, bool) {
 			}
 			next += size
 		}
+	}
+	return next, true
+}
+
+func isASCIIToolKeyword(keyword string) bool {
+	for _, r := range keyword {
+		if r > 0x7f {
+			return false
+		}
+	}
+	return true
+}
+
+func consumeExactToolKeyword(text string, idx int, keyword string) (int, bool) {
+	next := idx
+	for _, want := range keyword {
+		next = skipToolMarkupIgnorables(text, next)
+		if next >= len(text) {
+			return idx, false
+		}
+		got, size := utf8.DecodeRuneInString(text[next:])
+		if size <= 0 || got != want {
+			return idx, false
+		}
+		next += size
 	}
 	return next, true
 }

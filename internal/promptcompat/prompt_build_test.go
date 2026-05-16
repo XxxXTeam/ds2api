@@ -47,10 +47,10 @@ func TestBuildOpenAIFinalPrompt_HandlerPathIncludesToolRoundtripSemantics(t *tes
 	if !strings.Contains(finalPrompt, `"condition":"sunny"`) {
 		t.Fatalf("handler finalPrompt should preserve tool output content: %q", finalPrompt)
 	}
-	if !strings.Contains(finalPrompt, "<|DSML|tool_calls>") {
+	if !strings.Contains(finalPrompt, "<|DSML|工具调用>") {
 		t.Fatalf("handler finalPrompt should preserve assistant tool history: %q", finalPrompt)
 	}
-	if !strings.Contains(finalPrompt, `<|DSML|invoke name="get_weather">`) {
+	if !strings.Contains(finalPrompt, `<|DSML|调用 name="get_weather">`) {
 		t.Fatalf("handler finalPrompt should include tool name history: %q", finalPrompt)
 	}
 }
@@ -74,13 +74,13 @@ func TestBuildOpenAIFinalPrompt_VercelPreparePathKeepsFinalAnswerInstruction(t *
 	}
 
 	finalPrompt, _ := buildOpenAIFinalPrompt(messages, tools, "", false)
-	if !strings.Contains(finalPrompt, "Remember: The ONLY valid way to use tools is the <|DSML|tool_calls>...</|DSML|tool_calls> block at the end of your response.") {
+	if !strings.Contains(finalPrompt, "Запомни: единственный допустимый способ использовать инструменты") {
 		t.Fatalf("vercel prepare finalPrompt missing final tool-call anchor instruction: %q", finalPrompt)
 	}
-	if !strings.Contains(finalPrompt, "TOOL CALL FORMAT") {
+	if !strings.Contains(finalPrompt, "ФОРМАТ ВЫЗОВА ИНСТРУМЕНТА") {
 		t.Fatalf("vercel prepare finalPrompt missing xml format instruction: %q", finalPrompt)
 	}
-	if !strings.Contains(finalPrompt, "Do NOT wrap XML in markdown fences") {
+	if !strings.Contains(finalPrompt, "НЕ оборачивай XML в markdown-блоки") {
 		t.Fatalf("vercel prepare finalPrompt missing no-fence xml instruction: %q", finalPrompt)
 	}
 	if strings.Contains(finalPrompt, "```json") {
@@ -110,13 +110,13 @@ func TestBuildOpenAIPromptWithToolInstructionsOnlyOmitsSchemas(t *testing.T) {
 	if len(toolNames) != 1 || toolNames[0] != "search" {
 		t.Fatalf("unexpected tool names: %#v", toolNames)
 	}
-	if strings.Contains(finalPrompt, "You have access to these tools") || strings.Contains(finalPrompt, "Description: search docs") || strings.Contains(finalPrompt, "Parameters:") {
+	if strings.Contains(finalPrompt, "Тебе доступны эти инструменты") || strings.Contains(finalPrompt, "Описание: search docs") || strings.Contains(finalPrompt, "Параметры:") {
 		t.Fatalf("tool descriptions should be externalized, got: %q", finalPrompt)
 	}
-	if !strings.Contains(finalPrompt, "Treat DS2API_TOOLS.txt as the authoritative list of callable tools and schemas") {
+	if !strings.Contains(finalPrompt, "Считай DS2API_TOOLS.txt авторитетным списком") {
 		t.Fatalf("expected instructions-only prompt to point model at tools file, got: %q", finalPrompt)
 	}
-	if !strings.Contains(finalPrompt, "TOOL CALL FORMAT") || !strings.Contains(finalPrompt, "Remember: The ONLY valid way to use tools") {
+	if !strings.Contains(finalPrompt, "ФОРМАТ ВЫЗОВА ИНСТРУМЕНТА") || !strings.Contains(finalPrompt, "Запомни: единственный допустимый способ использовать инструменты") {
 		t.Fatalf("expected tool format instructions to remain in live prompt, got: %q", finalPrompt)
 	}
 }
@@ -139,12 +139,12 @@ func TestBuildOpenAIToolsContextTranscriptContainsOnlyDescriptions(t *testing.T)
 	if len(toolNames) != 1 || toolNames[0] != "search" {
 		t.Fatalf("unexpected tool names: %#v", toolNames)
 	}
-	for _, want := range []string{"# DS2API_TOOLS.txt", "You have access to these tools", "Tool: search", "Description: search docs", `Parameters: {"type":"object"}`} {
+	for _, want := range []string{"# DS2API_TOOLS.txt", "Тебе доступны эти инструменты", "Инструмент: search", "Описание: search docs", `Параметры: {"type":"object"}`} {
 		if !strings.Contains(transcript, want) {
 			t.Fatalf("expected tools transcript to contain %q, got: %q", want, transcript)
 		}
 	}
-	if strings.Contains(transcript, "TOOL CALL FORMAT") || strings.Contains(transcript, "<|DSML|tool_calls>") {
+	if strings.Contains(transcript, "ФОРМАТ ВЫЗОВА ИНСТРУМЕНТА") || strings.Contains(transcript, "<|DSML|工具调用>") {
 		t.Fatalf("tools transcript should not duplicate format instructions, got: %q", transcript)
 	}
 }
@@ -168,8 +168,8 @@ func TestBuildOpenAIFinalPromptPrependsOutputIntegrityGuard(t *testing.T) {
 	}
 
 	finalPrompt, _ := buildOpenAIFinalPrompt(messages, tools, "", false)
-	guardIdx := strings.Index(finalPrompt, "Output integrity guard")
-	toolIdx := strings.Index(finalPrompt, "TOOL CALL FORMAT")
+	guardIdx := strings.Index(finalPrompt, "Защита целостности вывода")
+	toolIdx := strings.Index(finalPrompt, "ФОРМАТ ВЫЗОВА ИНСТРУМЕНТА")
 	if guardIdx < 0 {
 		t.Fatalf("expected output integrity guard in final prompt, got: %q", finalPrompt)
 	}
@@ -199,13 +199,13 @@ func TestBuildOpenAIFinalPromptReadLikeToolIncludesCacheGuard(t *testing.T) {
 	}
 
 	finalPrompt, _ := buildOpenAIFinalPrompt(messages, tools, "", false)
-	if !strings.Contains(finalPrompt, "Read-tool cache guard") {
+	if !strings.Contains(finalPrompt, "Защита кэша инструмента чтения") {
 		t.Fatalf("read-like tool prompt missing cache guard: %q", finalPrompt)
 	}
-	if !strings.Contains(finalPrompt, "provides no file body") {
+	if !strings.Contains(finalPrompt, "не содержит тело файла") {
 		t.Fatalf("read-like tool prompt missing no-body handling: %q", finalPrompt)
 	}
-	if !strings.Contains(finalPrompt, "Do not repeatedly call the same read request") {
+	if !strings.Contains(finalPrompt, "Не вызывай повторно тот же запрос чтения") {
 		t.Fatalf("read-like tool prompt missing loop guard: %q", finalPrompt)
 	}
 }
@@ -228,7 +228,7 @@ func TestBuildOpenAIFinalPromptNonReadToolOmitsCacheGuard(t *testing.T) {
 	}
 
 	finalPrompt, _ := buildOpenAIFinalPrompt(messages, tools, "", false)
-	if strings.Contains(finalPrompt, "Read-tool cache guard") {
+	if strings.Contains(finalPrompt, "Защита кэша инструмента чтения") {
 		t.Fatalf("non-read tool prompt should not include read cache guard: %q", finalPrompt)
 	}
 }

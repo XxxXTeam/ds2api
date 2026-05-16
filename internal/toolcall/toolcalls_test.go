@@ -41,6 +41,18 @@ func TestParseToolCallsSupportsDSMLShell(t *testing.T) {
 	}
 }
 
+func TestParseToolCallsSupportsChineseDSMLTags(t *testing.T) {
+	text := `<|DSML|工具调用><|DSML|调用 name="Bash"><|DSML|参数 name="command"><![CDATA[pwd]]></|DSML|参数><|DSML|参数 name="items"><项><name><![CDATA[a]]></name></项><项><name><![CDATA[b]]></name></项></|DSML|参数></|DSML|调用></|DSML|工具调用>`
+	calls := ParseToolCalls(text, []string{"Bash"})
+	if len(calls) != 1 {
+		t.Fatalf("expected 1 Chinese DSML call, got %#v", calls)
+	}
+	items, ok := calls[0].Input["items"].([]any)
+	if calls[0].Name != "Bash" || calls[0].Input["command"] != "pwd" || !ok || len(items) != 2 {
+		t.Fatalf("unexpected Chinese DSML parse result: %#v", calls[0])
+	}
+}
+
 func TestParseToolCallsSupportsHyphenatedDSMLShellWithHereDocCDATA(t *testing.T) {
 	text := `<dsml-tool-calls>
 <dsml-invoke name="Bash">

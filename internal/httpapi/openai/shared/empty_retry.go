@@ -2,7 +2,7 @@ package shared
 
 import "strings"
 
-const EmptyOutputRetrySuffix = "Previous reply had no visible output. Please regenerate the visible final answer or tool call now."
+const EmptyOutputRetrySuffix = "Предыдущий ответ не содержал видимого вывода. Сейчас сгенерируй видимый финальный ответ на китайском языке или вызов инструмента."
 
 func EmptyOutputRetryEnabled() bool {
 	return true

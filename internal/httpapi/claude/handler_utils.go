@@ -157,12 +157,12 @@ func buildClaudeToolPrompt(tools []any) string {
 		}
 		names = append(names, name)
 		schema, _ := json.Marshal(schemaObj)
-		toolSchemas = append(toolSchemas, fmt.Sprintf("Tool: %s\nDescription: %s\nParameters: %s", name, desc, schema))
+		toolSchemas = append(toolSchemas, fmt.Sprintf("Инструмент: %s\nОписание: %s\nПараметры: %s", name, desc, schema))
 	}
 	if len(toolSchemas) == 0 {
 		return ""
 	}
-	return "You have access to these tools:\n\n" +
+	return "Тебе доступны эти инструменты:\n\n" +
 		strings.Join(toolSchemas, "\n\n") + "\n\n" +
 		toolcall.BuildToolCallInstructions(names)
 }

@@ -9,57 +9,58 @@ import "strings"
 // The toolNames slice should contain the actual tool names available in the
 // current request; the function picks real names for examples.
 func BuildToolCallInstructions(toolNames []string) string {
-	return `TOOL CALL FORMAT — FOLLOW EXACTLY:
+	return `ФОРМАТ ВЫЗОВА ИНСТРУМЕНТА - СЛЕДУЙ ТОЧНО:
 
-<|DSML|tool_calls>
-  <|DSML|invoke name="TOOL_NAME_HERE">
-    <|DSML|parameter name="PARAMETER_NAME"><![CDATA[PARAMETER_VALUE]]></|DSML|parameter>
-  </|DSML|invoke>
-</|DSML|tool_calls>
+<|DSML|工具调用>
+  <|DSML|调用 name="TOOL_NAME_HERE">
+    <|DSML|参数 name="PARAMETER_NAME"><![CDATA[PARAMETER_VALUE]]></|DSML|参数>
+  </|DSML|调用>
+</|DSML|工具调用>
 
-RULES:
-1) Use the <|DSML|tool_calls> wrapper format.
-2) Put one or more <|DSML|invoke> entries under a single <|DSML|tool_calls> root.
-3) Put the tool name in the invoke name attribute: <|DSML|invoke name="TOOL_NAME">.
-3a) Tag punctuation alphabet: ASCII < > / = " plus the halfwidth pipe |.
-4) All string values must use <![CDATA[...]]>, even short ones. This includes code, scripts, file contents, prompts, paths, names, and queries.
-5) Every top-level argument must be a <|DSML|parameter name="ARG_NAME">...</|DSML|parameter> node.
-6) Objects use nested XML elements inside the parameter body. Arrays may repeat <item> children.
-7) Numbers, booleans, and null stay plain text.
-8) Use only the parameter names in the tool schema. Do not invent fields.
-9) Fill parameters with the actual values required for this call. Do not emit placeholder, blank, or whitespace-only parameters.
-10) If a required parameter value is unknown, ask the user or answer normally instead of outputting an empty tool call.
-11) For shell tools such as Bash / execute_command, the command/script must be inside the command parameter. Never call them with an empty command.
-12) Do NOT wrap XML in markdown fences. Do NOT output explanations, role markers, or internal monologue.
-13) If you call a tool, the first non-whitespace characters of that tool block must be exactly <|DSML|tool_calls>.
-14) Never omit the opening <|DSML|tool_calls> tag, even if you already plan to close with </|DSML|tool_calls>.
-15) Compatibility note: the runtime also accepts the legacy XML tags <tool_calls> / <invoke> / <parameter>, but prefer the DSML-prefixed form above.
+ПРАВИЛА:
+1) Используй обертку <|DSML|工具调用>.
+2) Помещай один или несколько элементов <|DSML|调用> под единый корень <|DSML|工具调用>.
+3) Указывай имя инструмента в атрибуте name элемента invoke: <|DSML|调用 name="TOOL_NAME">.
+3a) Для пунктуации тегов используй ASCII < > / = " и полуширинную вертикальную черту |.
+4) Все строковые значения должны использовать <![CDATA[...]]>, даже короткие. Это касается кода, скриптов, содержимого файлов, промптов, путей, имен и запросов.
+5) Каждый аргумент верхнего уровня должен быть узлом <|DSML|参数 name="ARG_NAME">...</|DSML|参数>.
+6) Объекты используют вложенные XML-элементы внутри тела parameter. Массивы могут повторять дочерние элементы <项>.
+7) Числа, логические значения и null остаются обычным текстом.
+8) Используй только имена параметров из схемы инструмента. Не придумывай поля.
+9) Заполняй параметры фактическими значениями, нужными для этого вызова. Не выводи плейсхолдеры, пустые или состоящие только из пробелов параметры.
+10) Если обязательное значение параметра неизвестно, спроси пользователя на китайском языке или ответь нормально вместо пустого вызова инструмента.
+11) Для shell-инструментов вроде Bash / execute_command команда или скрипт должны быть внутри параметра command. Никогда не вызывай их с пустой командой.
+12) НЕ оборачивай XML в markdown-блоки. НЕ выводи объяснения, маркеры ролей или внутренний монолог.
+13) Если вызываешь инструмент, первые непробельные символы блока инструмента должны быть ровно <|DSML|工具调用>.
+14) Никогда не пропускай открывающий тег <|DSML|工具调用>, даже если уже планируешь закрыть </|DSML|工具调用>.
+15) Примечание о совместимости: runtime также принимает устаревшие XML-теги <tool_calls> / <invoke> / <parameter>, но предпочитай DSML-форму выше.
+16) Если не вызываешь инструмент, отвечай пользователю на китайском языке.
 
-PARAMETER SHAPES:
-- string => <|DSML|parameter name="x"><![CDATA[value]]></|DSML|parameter>
-- object => <|DSML|parameter name="x"><field>...</field></|DSML|parameter>
-- array => <|DSML|parameter name="x"><item>...</item><item>...</item></|DSML|parameter>
-- number/bool/null => <|DSML|parameter name="x">plain_text</|DSML|parameter>
+ФОРМЫ ПАРАМЕТРОВ:
+- string => <|DSML|参数 name="x"><![CDATA[value]]></|DSML|参数>
+- object => <|DSML|参数 name="x"><field>...</field></|DSML|参数>
+- array => <|DSML|参数 name="x"><项>...</项><项>...</项></|DSML|参数>
+- number/bool/null => <|DSML|参数 name="x">plain_text</|DSML|参数>
 
-【WRONG — Do NOT do these】:
+【НЕПРАВИЛЬНО - НЕ ДЕЛАЙ ТАК】:
 
-Wrong 1 — mixed text after XML:
-  <|DSML|tool_calls>...</|DSML|tool_calls> I hope this helps.
-Wrong 2 — Markdown code fences:
+Ошибка 1 - текст после XML:
+  <|DSML|工具调用>...</|DSML|工具调用> I hope this helps.
+Ошибка 2 - markdown-блоки кода:
   ` + "```xml" + `
-  <|DSML|tool_calls>...</|DSML|tool_calls>
+  <|DSML|工具调用>...</|DSML|工具调用>
   ` + "```" + `
-Wrong 3 — missing opening wrapper:
-  <|DSML|invoke name="TOOL_NAME">...</|DSML|invoke>
-  </|DSML|tool_calls>
-Wrong 4 — empty parameters:
-  <|DSML|tool_calls>
-    <|DSML|invoke name="Bash">
-      <|DSML|parameter name="command"></|DSML|parameter>
-    </|DSML|invoke>
-  </|DSML|tool_calls>
+Ошибка 3 - отсутствует открывающая обертка:
+  <|DSML|调用 name="TOOL_NAME">...</|DSML|调用>
+  </|DSML|工具调用>
+Ошибка 4 - пустые параметры:
+  <|DSML|工具调用>
+    <|DSML|调用 name="Bash">
+      <|DSML|参数 name="command"></|DSML|参数>
+    </|DSML|调用>
+  </|DSML|工具调用>
 
-Remember: The ONLY valid way to use tools is the <|DSML|tool_calls>...</|DSML|tool_calls> block at the end of your response.
+Запомни: единственный допустимый способ использовать инструменты - блок <|DSML|工具调用>...</|DSML|工具调用> в конце ответа.
 ` + buildCorrectToolExamples(toolNames)
 }
 
@@ -73,25 +74,25 @@ func buildCorrectToolExamples(toolNames []string) string {
 	examples := make([]string, 0, 4)
 
 	if single, ok := firstBasicExample(names); ok {
-		examples = append(examples, "Example A — Single tool:\n"+renderToolExampleBlock([]promptToolExample{single}))
+		examples = append(examples, "Пример A - один инструмент:\n"+renderToolExampleBlock([]promptToolExample{single}))
 	}
 
 	if parallel := firstNBasicExamples(names, 2); len(parallel) >= 2 {
-		examples = append(examples, "Example B — Two tools in parallel:\n"+renderToolExampleBlock(parallel))
+		examples = append(examples, "Пример B - два инструмента параллельно:\n"+renderToolExampleBlock(parallel))
 	}
 
 	if nested, ok := firstNestedExample(names); ok {
-		examples = append(examples, "Example C — Tool with nested XML parameters:\n"+renderToolExampleBlock([]promptToolExample{nested}))
+		examples = append(examples, "Пример C - инструмент с вложенными XML-параметрами:\n"+renderToolExampleBlock([]promptToolExample{nested}))
 	}
 
 	if script, ok := firstScriptExample(names); ok {
-		examples = append(examples, "Example D — Tool with long script using CDATA (RELIABLE FOR CODE/SCRIPTS):\n"+renderToolExampleBlock([]promptToolExample{script}))
+		examples = append(examples, "Пример D - инструмент с длинным скриптом через CDATA (НАДЕЖНО ДЛЯ КОДА/СКРИПТОВ):\n"+renderToolExampleBlock([]promptToolExample{script}))
 	}
 
 	if len(examples) == 0 {
 		return ""
 	}
-	return "【CORRECT EXAMPLES】:\n\n" + strings.Join(examples, "\n\n") + "\n\n"
+	return "【ПРАВИЛЬНЫЕ ПРИМЕРЫ】:\n\n" + strings.Join(examples, "\n\n") + "\n\n"
 }
 
 func uniqueToolNames(toolNames []string) []string {
@@ -150,21 +151,21 @@ func firstScriptExample(names []string) (promptToolExample, bool) {
 
 func renderToolExampleBlock(calls []promptToolExample) string {
 	var b strings.Builder
-	b.WriteString("<|DSML|tool_calls>\n")
+	b.WriteString("<|DSML|工具调用>\n")
 	for _, call := range calls {
-		b.WriteString(`  <|DSML|invoke name="`)
+		b.WriteString(`  <|DSML|调用 name="`)
 		b.WriteString(call.name)
 		b.WriteString(`">` + "\n")
 		b.WriteString(indentPromptParameters(call.params, "    "))
-		b.WriteString("\n  </|DSML|invoke>\n")
+		b.WriteString("\n  </|DSML|调用>\n")
 	}
-	b.WriteString("</|DSML|tool_calls>")
+	b.WriteString("</|DSML|工具调用>")
 	return b.String()
 }
 
 func indentPromptParameters(body, indent string) string {
 	if strings.TrimSpace(body) == "" {
-		return indent + `<|DSML|parameter name="content"></|DSML|parameter>`
+		return indent + `<|DSML|参数 name="content"></|DSML|参数>`
 	}
 	lines := strings.Split(body, "\n")
 	for i, line := range lines {
@@ -178,7 +179,7 @@ func indentPromptParameters(body, indent string) string {
 }
 
 func wrapParameter(name, inner string) string {
-	return `<|DSML|parameter name="` + name + `">` + inner + `</|DSML|parameter>`
+	return `<|DSML|参数 name="` + name + `">` + inner + `</|DSML|参数>`
 }
 
 func exampleBasicParams(name string) (string, bool) {
@@ -204,7 +205,7 @@ func exampleBasicParams(name string) (string, bool) {
 	case "Edit":
 		return wrapParameter("file_path", promptCDATA("README.md")) + "\n" + wrapParameter("old_string", promptCDATA("foo")) + "\n" + wrapParameter("new_string", promptCDATA("bar")), true
 	case "MultiEdit":
-		return wrapParameter("file_path", promptCDATA("README.md")) + "\n" + `<|DSML|parameter name="edits"><item><old_string>` + promptCDATA("foo") + `</old_string><new_string>` + promptCDATA("bar") + `</new_string></item></|DSML|parameter>`, true
+		return wrapParameter("file_path", promptCDATA("README.md")) + "\n" + `<|DSML|参数 name="edits"><项><old_string>` + promptCDATA("foo") + `</old_string><new_string>` + promptCDATA("bar") + `</new_string></项></|DSML|参数>`, true
 	}
 	return "", false
 }
@@ -212,11 +213,11 @@ func exampleBasicParams(name string) (string, bool) {
 func exampleNestedParams(name string) (string, bool) {
 	switch strings.TrimSpace(name) {
 	case "MultiEdit":
-		return wrapParameter("file_path", promptCDATA("README.md")) + "\n" + `<|DSML|parameter name="edits"><item><old_string>` + promptCDATA("foo") + `</old_string><new_string>` + promptCDATA("bar") + `</new_string></item></|DSML|parameter>`, true
+		return wrapParameter("file_path", promptCDATA("README.md")) + "\n" + `<|DSML|参数 name="edits"><项><old_string>` + promptCDATA("foo") + `</old_string><new_string>` + promptCDATA("bar") + `</new_string></项></|DSML|参数>`, true
 	case "Task":
 		return wrapParameter("description", promptCDATA("Investigate flaky tests")) + "\n" + wrapParameter("prompt", promptCDATA("Run targeted tests and summarize failures")), true
 	case "ask_followup_question":
-		return wrapParameter("question", promptCDATA("Which approach do you prefer?")) + "\n" + `<|DSML|parameter name="follow_up"><item><text>` + promptCDATA("Option A") + `</text></item><item><text>` + promptCDATA("Option B") + `</text></item></|DSML|parameter>`, true
+		return wrapParameter("question", promptCDATA("Which approach do you prefer?")) + "\n" + `<|DSML|参数 name="follow_up"><项><text>` + promptCDATA("Option A") + `</text></项><项><text>` + promptCDATA("Option B") + `</text></项></|DSML|参数>`, true
 	}
 	return "", false
 }

@@ -12,7 +12,7 @@ import (
 const CurrentToolsContextFilename = "DS2API_TOOLS.txt"
 
 const toolsTranscriptTitle = "# DS2API_TOOLS.txt"
-const toolsTranscriptSummary = "Available tool descriptions and parameter schemas for this request."
+const toolsTranscriptSummary = "Доступные описания инструментов и схемы параметров для этого запроса."
 
 type toolPromptParts struct {
 	Descriptions string
@@ -40,7 +40,7 @@ func injectToolPromptWithDescriptions(messages []map[string]any, tools []any, po
 	if includeDescriptions && parts.Descriptions != "" {
 		toolPrompt = parts.Descriptions + "\n\n" + toolPrompt
 	} else if !includeDescriptions && parts.Descriptions != "" {
-		toolPrompt = "Available tool descriptions and parameter schemas are attached in DS2API_TOOLS.txt. Treat DS2API_TOOLS.txt as the authoritative list of callable tools and schemas; use only tools and parameters listed there.\n\n" + toolPrompt
+		toolPrompt = "Доступные описания инструментов и схемы параметров приложены в DS2API_TOOLS.txt. Считай DS2API_TOOLS.txt авторитетным списком вызываемых инструментов и схем; используй только перечисленные там инструменты и параметры. Если отвечаешь пользователю без вызова инструмента, отвечай на китайском языке.\n\n" + toolPrompt
 	}
 
 	for i := range messages {
@@ -80,25 +80,25 @@ func buildToolPromptParts(tools []any, policy ToolChoicePolicy) toolPromptParts 
 		}
 		names = append(names, name)
 		if desc == "" {
-			desc = "No description available"
+			desc = "Описание недоступно"
 		}
 		b, _ := json.Marshal(schema)
-		toolSchemas = append(toolSchemas, fmt.Sprintf("Tool: %s\nDescription: %s\nParameters: %s", name, desc, string(b)))
+		toolSchemas = append(toolSchemas, fmt.Sprintf("Инструмент: %s\nОписание: %s\nПараметры: %s", name, desc, string(b)))
 	}
 	if len(toolSchemas) == 0 {
 		return toolPromptParts{Names: names}
 	}
-	descriptions := "You have access to these tools:\n\n" + strings.Join(toolSchemas, "\n\n")
+	descriptions := "Тебе доступны эти инструменты:\n\n" + strings.Join(toolSchemas, "\n\n")
 	instructions := toolcall.BuildToolCallInstructions(names)
 	if hasReadLikeTool(names) {
-		instructions += "\n\nRead-tool cache guard: If a Read/read_file-style tool result says the file is unchanged, already available in history, should be referenced from previous context, or otherwise provides no file body, treat that result as missing content. Do not repeatedly call the same read request for that missing body. Request a full-content read if the tool supports it, or tell the user that the file contents need to be provided again."
+		instructions += "\n\nЗащита кэша инструмента чтения: если результат инструмента типа Read/read_file сообщает, что файл не изменился, уже доступен в истории, должен быть взят из предыдущего контекста или иначе не содержит тело файла, считай такой результат отсутствующим содержимым. Не вызывай повторно тот же запрос чтения ради отсутствующего тела. Запроси чтение полного содержимого, если инструмент это поддерживает, или сообщи пользователю на китайском языке, что содержимое файла нужно предоставить снова."
 	}
 	if policy.Mode == ToolChoiceRequired {
-		instructions += "\n7) For this response, you MUST call at least one tool from the allowed list."
+		instructions += "\n7) В этом ответе ты ОБЯЗАН вызвать хотя бы один инструмент из разрешенного списка."
 	}
 	if policy.Mode == ToolChoiceForced && strings.TrimSpace(policy.ForcedName) != "" {
-		instructions += "\n7) For this response, you MUST call exactly this tool name: " + strings.TrimSpace(policy.ForcedName)
-		instructions += "\n8) Do not call any other tool."
+		instructions += "\n7) В этом ответе ты ОБЯЗАН вызвать ровно этот инструмент: " + strings.TrimSpace(policy.ForcedName)
+		instructions += "\n8) Не вызывай никакие другие инструменты."
 	}
 	return toolPromptParts{
 		Descriptions: descriptions,

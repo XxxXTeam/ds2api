@@ -93,10 +93,10 @@ func TestNormalizeClaudeMessagesToolUseToAssistantToolCalls(t *testing.T) {
 		t.Fatalf("expected call id preserved, got %#v", call)
 	}
 	content, _ := m["content"].(string)
-	if !containsStr(content, "<|DSML|tool_calls>") || !containsStr(content, `<|DSML|invoke name="search_web">`) {
+	if !containsStr(content, "<|DSML|工具调用>") || !containsStr(content, `<|DSML|调用 name="search_web">`) {
 		t.Fatalf("expected assistant content to include DSML tool call history, got %q", content)
 	}
-	if !containsStr(content, `<|DSML|parameter name="query"><![CDATA[latest]]></|DSML|parameter>`) {
+	if !containsStr(content, `<|DSML|参数 name="query"><![CDATA[latest]]></|DSML|参数>`) {
 		t.Fatalf("expected assistant content to include serialized parameters, got %q", content)
 	}
 }
@@ -133,7 +133,7 @@ func TestNormalizeClaudeMessagesPreservesThinkingOnToolUseHistory(t *testing.T) 
 	if !containsStr(prompt, "[reasoning_content]\nneed live search before answering\n[/reasoning_content]") {
 		t.Fatalf("expected thinking in prompt history, got %q", prompt)
 	}
-	if !containsStr(prompt, `<|DSML|invoke name="search_web">`) {
+	if !containsStr(prompt, `<|DSML|调用 name="search_web">`) {
 		t.Fatalf("expected tool call in prompt history, got %q", prompt)
 	}
 }
@@ -329,10 +329,10 @@ func TestBuildClaudeToolPromptSingleTool(t *testing.T) {
 	if !containsStr(prompt, "Search the web") {
 		t.Fatalf("expected description in prompt")
 	}
-	if !containsStr(prompt, "<|DSML|tool_calls>") {
+	if !containsStr(prompt, "<|DSML|工具调用>") {
 		t.Fatalf("expected DSML tool_calls format in prompt")
 	}
-	if !containsStr(prompt, "TOOL CALL FORMAT") {
+	if !containsStr(prompt, "ФОРМАТ ВЫЗОВА ИНСТРУМЕНТА") {
 		t.Fatalf("expected tool call format header in prompt")
 	}
 }
@@ -365,7 +365,7 @@ func TestBuildClaudeToolPromptSupportsOpenAIStyleFunctionTool(t *testing.T) {
 		},
 	}
 	prompt := buildClaudeToolPrompt(tools)
-	if !containsStr(prompt, "Tool: search") {
+	if !containsStr(prompt, "Инструмент: search") {
 		t.Fatalf("expected OpenAI-style function tool name in prompt, got: %q", prompt)
 	}
 	if !containsStr(prompt, "Search via function tool") {

@@ -661,7 +661,7 @@ func cdataFragmentLooksExplicitlyStructured(raw string) bool {
 				if directChildren != 1 {
 					return false
 				}
-				if firstChildName == "item" {
+				if isXMLItemName(firstChildName) {
 					return true
 				}
 				return firstChildHasNested

@@ -139,7 +139,7 @@ func TestClaudeDirectAppliesCurrentInputFile(t *testing.T) {
 		t.Fatalf("expected uploaded history ref id, got %#v", ds.payload["ref_file_ids"])
 	}
 	prompt, _ := ds.payload["prompt"].(string)
-	if !strings.Contains(prompt, "Continue from the latest state in the attached DS2API_HISTORY.txt context.") {
+	if !strings.Contains(prompt, "Продолжай с последнего состояния из приложенного контекста DS2API_HISTORY.txt.") {
 		t.Fatalf("expected continuation prompt, got %q", prompt)
 	}
 	snapshot, err := historyStore.Snapshot()
@@ -156,7 +156,7 @@ func TestClaudeDirectAppliesCurrentInputFile(t *testing.T) {
 	if full.HistoryText != string(ds.uploads[0].Data) {
 		t.Fatalf("expected uploaded current input file to be persisted in history text")
 	}
-	if len(full.Messages) != 1 || !strings.Contains(full.Messages[0].Content, "Continue from the latest state in the attached DS2API_HISTORY.txt context.") {
+	if len(full.Messages) != 1 || !strings.Contains(full.Messages[0].Content, "Продолжай с последнего состояния из приложенного контекста DS2API_HISTORY.txt.") {
 		t.Fatalf("expected persisted message to match upstream continuation prompt, got %#v", full.Messages)
 	}
 }
@@ -185,11 +185,11 @@ func TestClaudeCurrentInputFileUploadsToolsSeparately(t *testing.T) {
 		t.Fatalf("unexpected upload filenames: %#v", ds.uploads)
 	}
 	historyText := string(ds.uploads[0].Data)
-	if strings.Contains(historyText, "You have access to these tools") || strings.Contains(historyText, "Description: Search docs") {
+	if strings.Contains(historyText, "Тебе доступны эти инструменты") || strings.Contains(historyText, "Описание: Search docs") {
 		t.Fatalf("history transcript should not embed tool descriptions, got %q", historyText)
 	}
 	toolsText := string(ds.uploads[1].Data)
-	if !strings.Contains(toolsText, "# DS2API_TOOLS.txt") || !strings.Contains(toolsText, "Tool: search") || !strings.Contains(toolsText, "Description: Search docs") {
+	if !strings.Contains(toolsText, "# DS2API_TOOLS.txt") || !strings.Contains(toolsText, "Инструмент: search") || !strings.Contains(toolsText, "Описание: Search docs") {
 		t.Fatalf("expected tools transcript to include tool schema, got %q", toolsText)
 	}
 	refIDs, _ := ds.payload["ref_file_ids"].([]any)
@@ -197,10 +197,10 @@ func TestClaudeCurrentInputFileUploadsToolsSeparately(t *testing.T) {
 		t.Fatalf("expected history and tools ref ids first, got %#v", ds.payload["ref_file_ids"])
 	}
 	prompt, _ := ds.payload["prompt"].(string)
-	if !strings.Contains(prompt, "DS2API_TOOLS.txt") || !strings.Contains(prompt, "TOOL CALL FORMAT") {
+	if !strings.Contains(prompt, "DS2API_TOOLS.txt") || !strings.Contains(prompt, "ФОРМАТ ВЫЗОВА ИНСТРУМЕНТА") {
 		t.Fatalf("expected live prompt to reference tools file and retain format instructions, got %q", prompt)
 	}
-	if strings.Contains(prompt, "Description: Search docs") {
+	if strings.Contains(prompt, "Описание: Search docs") {
 		t.Fatalf("live prompt should not inline tool descriptions, got %q", prompt)
 	}
 }

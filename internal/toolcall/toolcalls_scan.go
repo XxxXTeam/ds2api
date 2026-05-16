@@ -13,10 +13,13 @@ type toolMarkupNameAlias struct {
 }
 
 var toolMarkupNames = []toolMarkupNameAlias{
+	{raw: "工具调用", canonical: "tool_calls"},
 	{raw: "tool_calls", canonical: "tool_calls"},
 	{raw: "tool-calls", canonical: "tool_calls", dsmlOnly: true},
 	{raw: "toolcalls", canonical: "tool_calls", dsmlOnly: true},
+	{raw: "调用", canonical: "invoke"},
 	{raw: "invoke", canonical: "invoke"},
+	{raw: "参数", canonical: "parameter"},
 	{raw: "parameter", canonical: "parameter"},
 }
 
@@ -352,6 +355,12 @@ func hasASCIIPartialPrefixFoldAt(text string, start int, prefix string) bool {
 
 func hasToolMarkupNamePrefix(text string, start int) bool {
 	for _, name := range toolMarkupNames {
+		if !isASCIIToolKeyword(name.raw) {
+			if hasExactToolKeywordPrefixAt(text, start, name.raw) {
+				return true
+			}
+			continue
+		}
 		if hasASCIIPrefixFoldAt(text, start, name.raw) {
 			return true
 		}
@@ -360,6 +369,27 @@ func hasToolMarkupNamePrefix(text string, start int) bool {
 		}
 	}
 	return false
+}
+
+func hasExactToolKeywordPrefixAt(text string, start int, keyword string) bool {
+	if start < 0 || start >= len(text) {
+		return false
+	}
+	idx := start
+	matched := 0
+	for _, want := range keyword {
+		idx = skipToolMarkupIgnorables(text, idx)
+		if idx >= len(text) {
+			return matched > 0
+		}
+		got, size := utf8.DecodeRuneInString(text[idx:])
+		if size <= 0 || got != want {
+			return false
+		}
+		idx += size
+		matched++
+	}
+	return matched > 0
 }
 
 func matchToolMarkupName(text string, start int, dsmlLike bool) (string, int) {

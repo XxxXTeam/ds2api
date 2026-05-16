@@ -34,7 +34,7 @@ func extractClaudeToolNames(tools []any) []string {
 func extractClaudeToolMeta(m map[string]any) (string, string, any) {
 	name, desc, schemaObj := toolcall.ExtractToolMeta(m)
 	if strings.TrimSpace(desc) == "" {
-		desc = "No description available"
+		desc = "Описание недоступно"
 	}
 	return strings.TrimSpace(name), strings.TrimSpace(desc), schemaObj
 }
