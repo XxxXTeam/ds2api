@@ -451,6 +451,7 @@ Constraints and behavior:
 - `Content-Type` must be `multipart/form-data` (otherwise `400`).
 - Total request size limit is **100 MiB** (over-limit returns `413`).
 - Success returns an OpenAI `file` object (`id/object/bytes/filename/purpose/status`, etc.) and includes `account_id` for source-account tracing.
+- When the upload target resolves to DeepSeek Pro / `model_type=expert`, DS2API does not call the DeepSeek file upload API. It stores the file temporarily in local memory and returns a `url` field. That URL uses the admin-configured `deepseek.file_base_url` as the public host and appends `/__ds2api/files/{id}`, so the base URL must be reachable by DeepSeek.
 
 ### `GET /v1/files/{file_id}`
 
@@ -767,6 +768,7 @@ Reads runtime settings and status, including:
 - `admin` (`has_password_hash`, `jwt_expire_hours`, `jwt_valid_after_unix`, `default_password_warning`)
 - `runtime` (`account_max_inflight`, `account_max_queue`, `global_max_inflight`, `token_refresh_interval_hours`)
 - `responses` / `embeddings`
+- `deepseek` (`file_base_url`, the public base URL for DeepSeek Pro local file URLs)
 - `auto_delete` (`mode`: `none` / `single` / `all`; legacy `sessions=true` is still treated as `all`)
 - `current_input_file` (`enabled` defaults to `true`, plus `min_chars`)
 - `thinking_injection` (`enabled` defaults to `true`, `prompt`, and `default_prompt`)
@@ -782,6 +784,7 @@ Hot-updates runtime settings. Supported fields:
 - `runtime.account_max_inflight` / `runtime.account_max_queue` / `runtime.global_max_inflight` / `runtime.token_refresh_interval_hours`
 - `responses.store_ttl_seconds`
 - `embeddings.provider`
+- `deepseek.file_base_url`
 - `auto_delete.mode`
 - `current_input_file.enabled` / `current_input_file.min_chars`
 - `thinking_injection.enabled` / `thinking_injection.prompt`

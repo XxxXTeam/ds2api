@@ -101,6 +101,7 @@ func (c *Config) NormalizeCredentials() {
 		c.Accounts[i].Remark = strings.TrimSpace(c.Accounts[i].Remark)
 	}
 	c.DeepSeek.RangersID = strings.TrimSpace(c.DeepSeek.RangersID)
+	c.DeepSeek.FileBaseURL = strings.TrimRight(strings.TrimSpace(c.DeepSeek.FileBaseURL), "/")
 
 	c.Vercel = NormalizeVercelConfig(c.Vercel)
 	c.normalizeModelAliases()
@@ -166,7 +167,8 @@ type EmbeddingsConfig struct {
 }
 
 type DeepSeekConfig struct {
-	RangersID string `json:"rangers_id,omitempty"`
+	RangersID   string `json:"rangers_id,omitempty"`
+	FileBaseURL string `json:"file_base_url,omitempty"`
 }
 
 type AutoDeleteConfig struct {

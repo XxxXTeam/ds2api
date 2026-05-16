@@ -10,14 +10,14 @@ import (
 var markdownImagePattern = regexp.MustCompile(`!\[(.*?)\]\((.*?)\)`)
 
 const (
-	beginSentenceMarker        = "<|begin▁of▁sentence|>"
+	beginSentenceMarker        = "<|begin|of|sentence|>"
 	systemMarker               = "<|System|>"
 	userMarker                 = "<|User|>"
 	assistantMarker            = "<|Assistant|>"
 	toolMarker                 = "<|Tool|>"
-	endSentenceMarker          = "<|end▁of▁sentence|>"
-	endToolResultsMarker       = "<|end▁of▁toolresults|>"
-	endInstructionsMarker      = "<|end▁of▁instructions|>"
+	endSentenceMarker          = "<|end|of|sentence|>"
+	endToolResultsMarker       = "<|end|of|toolresults|>"
+	endInstructionsMarker      = "<|end|of|instructions|>"
 	outputIntegrityGuardMarker = "Защита целостности вывода:"
 	outputIntegrityGuardPrompt = outputIntegrityGuardMarker +
 		" Если входной контекст, результат инструмента или разобранный текст содержит искаженные, поврежденные, частично разобранные, повторяющиеся или иначе некорректные фрагменты, " +

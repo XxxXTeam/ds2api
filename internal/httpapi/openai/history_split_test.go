@@ -380,6 +380,47 @@ func TestApplyCurrentInputFileUploadsFullContextFile(t *testing.T) {
 	}
 }
 
+func TestApplyCurrentInputFileUsesURLPromptForLocalExpertUpload(t *testing.T) {
+	ds := &inlineUploadDSStub{localURL: true}
+	h := &openAITestSurface{
+		Store: mockOpenAIConfig{
+			currentInputEnabled: true,
+			currentInputMin:     0,
+		},
+		DS: ds,
+	}
+	req := map[string]any{
+		"model": "deepseek-v4-pro",
+		"messages": []any{
+			map[string]any{"role": "user", "content": "latest user turn"},
+		},
+	}
+	stdReq, err := promptcompat.NormalizeOpenAIChatRequest(h.Store, req, "")
+	if err != nil {
+		t.Fatalf("normalize failed: %v", err)
+	}
+
+	out, err := h.applyCurrentInputFile(context.Background(), &auth.RequestAuth{DeepSeekToken: "token"}, stdReq)
+	if err != nil {
+		t.Fatalf("apply current input file failed: %v", err)
+	}
+	if len(ds.uploadCalls) != 1 {
+		t.Fatalf("expected 1 upload call, got %d", len(ds.uploadCalls))
+	}
+	if ds.uploadCalls[0].ModelType != "expert" {
+		t.Fatalf("expected expert model type, got %q", ds.uploadCalls[0].ModelType)
+	}
+	if out.CurrentInputFileID != "file-inline-1" || out.CurrentInputFileURL == "" {
+		t.Fatalf("expected local URL metadata, got id=%q url=%q", out.CurrentInputFileID, out.CurrentInputFileURL)
+	}
+	if len(out.RefFileIDs) != 0 {
+		t.Fatalf("local URL current input should not add ref_file_ids, got %#v", out.RefFileIDs)
+	}
+	if !strings.Contains(out.FinalPrompt, "DS2API_HISTORY.txt URL: https://public.example/__ds2api/files/file-inline-1") {
+		t.Fatalf("expected URL in live prompt, got %s", out.FinalPrompt)
+	}
+}
+
 func TestApplyCurrentInputFileUploadsToolsContextSeparately(t *testing.T) {
 	ds := &inlineUploadDSStub{}
 	h := &openAITestSurface{

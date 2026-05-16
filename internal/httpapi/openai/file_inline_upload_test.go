@@ -23,6 +23,7 @@ type inlineUploadDSStub struct {
 	createSession  string
 	uploadErr      error
 	completionResp *http.Response
+	localURL       bool
 }
 
 func (m *inlineUploadDSStub) CreateSession(_ context.Context, _ *auth.RequestAuth, _ int) (string, error) {
@@ -46,13 +47,17 @@ func (m *inlineUploadDSStub) UploadFile(ctx context.Context, _ *auth.RequestAuth
 	if len(m.uploadCalls) > 1 {
 		id = "file-inline-" + fmt.Sprint(len(m.uploadCalls))
 	}
-	return &dsclient.UploadFileResult{
+	result := &dsclient.UploadFileResult{
 		ID:       id,
 		Filename: req.Filename,
 		Bytes:    int64(len(req.Data)),
 		Status:   "uploaded",
 		Purpose:  req.Purpose,
-	}, nil
+	}
+	if m.localURL {
+		result.URL = "https://public.example/__ds2api/files/" + id
+	}
+	return result, nil
 }
 
 func (m *inlineUploadDSStub) CallCompletion(_ context.Context, _ *auth.RequestAuth, payload map[string]any, _ string, _ int) (*http.Response, error) {
@@ -151,6 +156,39 @@ func TestPreprocessInlineFileInputsDeduplicatesIdenticalPayloads(t *testing.T) {
 	refIDs, _ := req["ref_file_ids"].([]any)
 	if len(refIDs) != 1 || refIDs[0] != "file-inline-1" {
 		t.Fatalf("unexpected ref_file_ids after dedupe: %#v", req["ref_file_ids"])
+	}
+}
+
+func TestPreprocessInlineFileInputsUsesURLTextForLocalExpertUpload(t *testing.T) {
+	ds := &inlineUploadDSStub{localURL: true}
+	h := &openAITestSurface{DS: ds}
+	req := map[string]any{
+		"model": "deepseek-v4-pro",
+		"messages": []any{
+			map[string]any{
+				"role": "user",
+				"content": []any{
+					map[string]any{"type": "input_file", "filename": "demo.txt", "data": "aGVsbG8="},
+				},
+			},
+		},
+	}
+
+	if err := h.preprocessInlineFileInputs(context.Background(), &auth.RequestAuth{DeepSeekToken: "token"}, req); err != nil {
+		t.Fatalf("preprocess failed: %v", err)
+	}
+	messages, _ := req["messages"].([]any)
+	first, _ := messages[0].(map[string]any)
+	content, _ := first["content"].([]any)
+	block, _ := content[0].(map[string]any)
+	if block["type"] != "input_text" {
+		t.Fatalf("expected URL text replacement, got %#v", block)
+	}
+	if text, _ := block["text"].(string); !strings.Contains(text, "https://public.example/__ds2api/files/file-inline-1") {
+		t.Fatalf("expected URL in replacement text, got %#v", block)
+	}
+	if _, ok := req["ref_file_ids"]; ok {
+		t.Fatalf("local URL replacements should not add ref_file_ids, got %#v", req["ref_file_ids"])
 	}
 }
 

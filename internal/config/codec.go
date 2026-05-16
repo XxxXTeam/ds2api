@@ -41,7 +41,7 @@ func (c Config) MarshalJSON() ([]byte, error) {
 	if strings.TrimSpace(c.Embeddings.Provider) != "" {
 		m["embeddings"] = c.Embeddings
 	}
-	if strings.TrimSpace(c.DeepSeek.RangersID) != "" {
+	if strings.TrimSpace(c.DeepSeek.RangersID) != "" || strings.TrimSpace(c.DeepSeek.FileBaseURL) != "" {
 		m["deepseek"] = c.DeepSeek
 	}
 	m["auto_delete"] = c.AutoDelete

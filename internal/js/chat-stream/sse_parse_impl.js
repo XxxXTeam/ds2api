@@ -7,9 +7,9 @@ const {
   SKIP_EXACT_PATHS,
 } = require('../shared/deepseek-constants');
 
-const LEAKED_BOS_MARKER_PATTERN = /<[\|\uFF5C]\s*begin[_▁]of[_▁]sentence\s*[\|\uFF5C]>/gi;
-const LEAKED_THOUGHT_MARKER_PATTERN = /<[\|\uFF5C]\s*(?:begin[_▁])?[_▁]*of[_▁]thought\s*[\|\uFF5C]>/gi;
-const LEAKED_META_MARKER_PATTERN = /<[\|\uFF5C]\s*(?:assistant|tool|end[_▁]of[_▁]sentence|end[_▁]of[_▁]thinking|end[_▁]of[_▁]thought|end[_▁]of[_▁]toolresults|end[_▁]of[_▁]instructions)\s*[\|\uFF5C]>/gi;
+const LEAKED_BOS_MARKER_PATTERN = /<[\|\uFF5C]\s*begin[_▁\|]of[_▁\|]sentence\s*[\|\uFF5C]>/gi;
+const LEAKED_THOUGHT_MARKER_PATTERN = /<[\|\uFF5C]\s*(?:begin[_▁\|])?[_▁\|]*of[_▁\|]thought\s*[\|\uFF5C]>/gi;
+const LEAKED_META_MARKER_PATTERN = /<[\|\uFF5C]\s*(?:assistant|tool|end[_▁\|]of[_▁\|]sentence|end[_▁\|]of[_▁\|]thinking|end[_▁\|]of[_▁\|]thought|end[_▁\|]of[_▁\|]toolresults|end[_▁\|]of[_▁\|]instructions)\s*[\|\uFF5C]>/gi;
 
 
 

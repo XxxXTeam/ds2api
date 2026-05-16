@@ -27,8 +27,11 @@ func (h *Handler) getSettings(w http.ResponseWriter, _ *http.Request) {
 			"global_max_inflight":          h.Store.RuntimeGlobalMaxInflight(recommended),
 			"token_refresh_interval_hours": h.Store.RuntimeTokenRefreshIntervalHours(),
 		},
-		"responses":   snap.Responses,
-		"embeddings":  snap.Embeddings,
+		"responses":  snap.Responses,
+		"embeddings": snap.Embeddings,
+		"deepseek": map[string]any{
+			"file_base_url": h.Store.DeepSeekFileBaseURL(),
+		},
 		"auto_delete": snap.AutoDelete,
 		"current_input_file": map[string]any{
 			"enabled":   h.Store.CurrentInputFileEnabled(),

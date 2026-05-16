@@ -3,14 +3,14 @@ export const DISABLED_LIMIT = 0
 export const MESSAGE_COLLAPSE_AT = 700
 export const VIEW_MODE_KEY = 'ds2api_chat_history_view_mode'
 
-const BEGIN_SENTENCE_MARKER = '<|begin▁of▁sentence|>'
+const BEGIN_SENTENCE_MARKER = '<|begin|of|sentence|>'
 const SYSTEM_MARKER = '<|System|>'
 const USER_MARKER = '<|User|>'
 const ASSISTANT_MARKER = '<|Assistant|>'
 const TOOL_MARKER = '<|Tool|>'
-const END_INSTRUCTIONS_MARKER = '<|end▁of▁instructions|>'
-const END_SENTENCE_MARKER = '<|end▁of▁sentence|>'
-const END_TOOL_RESULTS_MARKER = '<|end▁of▁toolresults|>'
+const END_INSTRUCTIONS_MARKER = '<|end|of|instructions|>'
+const END_SENTENCE_MARKER = '<|end|of|sentence|>'
+const END_TOOL_RESULTS_MARKER = '<|end|of|toolresults|>'
 const CURRENT_INPUT_FILE_PROMPT = 'Продолжай с последнего состояния из приложенного контекста DS2API_HISTORY.txt. Считай его текущим рабочим состоянием и напрямую отвечай на последний запрос пользователя на китайском языке.'
 const LEGACY_CURRENT_INPUT_FILE_PROMPTS = new Set([
     'The current request and prior conversation context have already been provided. Answer the latest user request directly.',

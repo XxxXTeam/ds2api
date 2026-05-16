@@ -70,8 +70,10 @@ func (s Service) ApplyCurrentInputFile(ctx context.Context, a *auth.RequestAuth,
 	if fileID == "" {
 		return stdReq, errors.New("upload current user input file returned empty file id")
 	}
+	fileURL := strings.TrimSpace(result.URL)
 
 	toolFileID := ""
+	toolFileURL := ""
 	if strings.TrimSpace(toolsText) != "" {
 		result, err := s.DS.UploadFile(ctx, a, dsclient.UploadFileRequest{
 			Filename:    currentToolsFilename,
@@ -87,12 +89,13 @@ func (s Service) ApplyCurrentInputFile(ctx context.Context, a *auth.RequestAuth,
 		if toolFileID == "" {
 			return stdReq, errors.New("upload current tools file returned empty file id")
 		}
+		toolFileURL = strings.TrimSpace(result.URL)
 	}
 
 	messages := []any{
 		map[string]any{
 			"role":    "user",
-			"content": currentInputFilePrompt(toolFileID != ""),
+			"content": currentInputFilePrompt(fileURL, toolFileURL, toolFileID != ""),
 		},
 	}
 
@@ -100,8 +103,10 @@ func (s Service) ApplyCurrentInputFile(ctx context.Context, a *auth.RequestAuth,
 	stdReq.HistoryText = fileText
 	stdReq.CurrentInputFileApplied = true
 	stdReq.CurrentInputFileID = fileID
+	stdReq.CurrentInputFileURL = fileURL
 	stdReq.CurrentToolsFileID = toolFileID
-	stdReq.RefFileIDs = prependUniqueRefFileIDs(stdReq.RefFileIDs, fileID, toolFileID)
+	stdReq.CurrentToolsFileURL = toolFileURL
+	stdReq.RefFileIDs = prependUniqueRefFileIDs(stdReq.RefFileIDs, refFileIDForUpload(fileID, fileURL), refFileIDForUpload(toolFileID, toolFileURL))
 	stdReq.FinalPrompt, stdReq.ToolNames = promptcompat.BuildOpenAIPromptWithToolInstructionsOnly(messages, stdReq.ToolsRaw, "", stdReq.ToolChoice, stdReq.Thinking)
 	// Token accounting must reflect the actual downstream context:
 	// uploaded context files + the continuation live prompt.
@@ -140,9 +145,11 @@ func (s Service) ReuploadAppliedCurrentInputFile(ctx context.Context, a *auth.Re
 	if fileID == "" {
 		return stdReq, errors.New("upload current user input file returned empty file id")
 	}
+	fileURL := strings.TrimSpace(result.URL)
 
 	toolsText, _ := promptcompat.BuildOpenAIToolsContextTranscript(stdReq.ToolsRaw, stdReq.ToolChoice)
 	toolFileID := ""
+	toolFileURL := ""
 	if strings.TrimSpace(toolsText) != "" {
 		result, err := s.DS.UploadFile(ctx, a, dsclient.UploadFileRequest{
 			Filename:    currentToolsFilename,
@@ -158,11 +165,28 @@ func (s Service) ReuploadAppliedCurrentInputFile(ctx context.Context, a *auth.Re
 		if toolFileID == "" {
 			return stdReq, errors.New("upload current tools file returned empty file id")
 		}
+		toolFileURL = strings.TrimSpace(result.URL)
 	}
 
-	stdReq.RefFileIDs = replaceGeneratedCurrentInputRefs(stdReq.RefFileIDs, stdReq.CurrentInputFileID, stdReq.CurrentToolsFileID, fileID, toolFileID)
+	stdReq.RefFileIDs = replaceGeneratedCurrentInputRefs(
+		stdReq.RefFileIDs,
+		refFileIDForUpload(stdReq.CurrentInputFileID, stdReq.CurrentInputFileURL),
+		refFileIDForUpload(stdReq.CurrentToolsFileID, stdReq.CurrentToolsFileURL),
+		refFileIDForUpload(fileID, fileURL),
+		refFileIDForUpload(toolFileID, toolFileURL),
+	)
 	stdReq.CurrentInputFileID = fileID
+	stdReq.CurrentInputFileURL = fileURL
 	stdReq.CurrentToolsFileID = toolFileID
+	stdReq.CurrentToolsFileURL = toolFileURL
+	messages := []any{
+		map[string]any{
+			"role":    "user",
+			"content": currentInputFilePrompt(fileURL, toolFileURL, toolFileID != ""),
+		},
+	}
+	stdReq.Messages = messages
+	stdReq.FinalPrompt, stdReq.ToolNames = promptcompat.BuildOpenAIPromptWithToolInstructionsOnly(messages, stdReq.ToolsRaw, "", stdReq.ToolChoice, stdReq.Thinking)
 	return stdReq, nil
 }
 
@@ -185,12 +209,25 @@ func latestUserInputForFile(messages []any) (int, string) {
 	return -1, ""
 }
 
-func currentInputFilePrompt(hasToolsFile bool) string {
+func currentInputFilePrompt(historyURL, toolsURL string, hasToolsFile bool) string {
 	prompt := "Продолжай с последнего состояния из приложенного контекста DS2API_HISTORY.txt. Считай его текущим рабочим состоянием и напрямую отвечай на последний запрос пользователя на китайском языке."
+	if strings.TrimSpace(historyURL) != "" {
+		prompt += " DS2API_HISTORY.txt URL: " + strings.TrimSpace(historyURL) + "."
+	}
 	if hasToolsFile {
 		prompt += " Доступные описания инструментов и схемы параметров приложены в DS2API_TOOLS.txt; используй только эти инструменты и следуй правилам формата вызова инструментов в этом промпте."
 	}
+	if strings.TrimSpace(toolsURL) != "" {
+		prompt += " DS2API_TOOLS.txt URL: " + strings.TrimSpace(toolsURL) + "."
+	}
 	return prompt
+}
+
+func refFileIDForUpload(fileID, fileURL string) string {
+	if strings.TrimSpace(fileURL) != "" {
+		return ""
+	}
+	return strings.TrimSpace(fileID)
 }
 
 func prependUniqueRefFileIDs(existing []string, fileIDs ...string) []string {

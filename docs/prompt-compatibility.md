@@ -89,7 +89,7 @@ DS2API 当前的核心思路，不是把客户端传来的 `messages`、`tools`�
   "chat_session_id": "session-id",
   "model_type": "default",
   "parent_message_id": null,
-  "prompt": "<|begin▁of▁sentence|>...",
+  "prompt": "<|begin|of|sentence|>...",
   "ref_file_ids": [
     "file-history",
     "file-systemprompt",
@@ -135,14 +135,14 @@ OpenAI Chat / Responses 在标准化后、current input file 之前，会默认�
 
 最终 prompt 使用 DeepSeek 风格角色标记：
 
-- `<|begin▁of▁sentence|>`
+- `<|begin|of|sentence|>`
 - `<|System|>`
 - `<|User|>`
 - `<|Assistant|>`
 - `<|Tool|>`
-- `<|end▁of▁instructions|>`
-- `<|end▁of▁sentence|>`
-- `<|end▁of▁toolresults|>`
+- `<|end|of|instructions|>`
+- `<|end|of|sentence|>`
+- `<|end|of|toolresults|>`
 
 实现位置：
 [internal/prompt/messages.go](../internal/prompt/messages.go)
@@ -237,7 +237,7 @@ assistant 历史 `tool_calls` 不会保留成 OpenAI 原生 JSON，而会转成 
 
 ### 7.3 tool result 保留方式
 
-tool / function role 的结果会作为 `<|Tool|>...<|end▁of▁toolresults|>` 进入 prompt。
+tool / function role 的结果会作为 `<|Tool|>...<|end|of|toolresults|>` 进入 prompt。
 
 如果 tool content 为空，当前会补成字符串 `"null"`，避免整个 tool turn 丢失。
 
@@ -266,6 +266,8 @@ OpenAI 的文件上传现在不再是“只传文件本体”的通用路径，�
 - current input file 触发时生成的 `DS2API_HISTORY.txt` 上下文文件
 
 也就是说，文件上传和完成请求的 `model_type` 现在是一致的：完成 payload 里仍然是 `model_type`，上传文件则会在 DeepSeek 上传阶段携带同样的模型类型信息。
+
+DeepSeek Pro（`model_type=expert`）走本地 URL 文件路径：DS2API 会把文件内容临时保存到本地内存，返回/注入由 `deepseek.file_base_url + /__ds2api/files/{id}` 组合出的 URL，并把 URL 写入 prompt 让 DeepSeek 主动读取；这类本地 URL 不再放入 `ref_file_ids`。因此后台必须配置 `deepseek.file_base_url`，且该主域名要能被 DeepSeek 访问。Flash / Vision 仍沿用 DeepSeek 原生上传与 `ref_file_ids`。
 
 结论：
 
@@ -327,6 +329,8 @@ OpenAI 的文件上传现在不再是“只传文件本体”的通用路径，�
 
 开启后，请求的 live prompt 不再直接内联完整上下文，也不再内联大段工具 schema；它保留一个 user role 的短提示，提示模型基于已提供上下文直接回答最新请求，并在有工具时引用 `DS2API_TOOLS.txt`。上传后的 `DS2API_HISTORY.txt` file_id 会排在 `ref_file_ids` 最前；如果存在 `DS2API_TOOLS.txt`，它的 file_id 紧随其后；客户端已有的其他 file_id 保持在后面。上下文 token 统计会包含上传的历史文件、工具文件和 live prompt。自动生成的 current-input 文件引用会被记录为 runtime 状态；如果托管账号模式切号 fresh retry，runtime 会重新上传这些自动文件，而不是把上一账号的 file_id 交给新账号。
 
+当目标模型是 DeepSeek Pro / `expert` 时，`DS2API_HISTORY.txt` 和 `DS2API_TOOLS.txt` 不再上传到 DeepSeek 文件接口；它们被保存到本地内存，live prompt 会包含对应 `DS2API_HISTORY.txt URL:` / `DS2API_TOOLS.txt URL:`，并且自动生成的本地文件不会进入 `ref_file_ids`。切号 fresh retry 时会重新生成本地 URL 并刷新 live prompt。
+
 ## 10. 各协议入口的差异
 
 ### 10.1 OpenAI Chat / Responses
@@ -374,7 +378,7 @@ OpenAI 的文件上传现在不再是“只传文件本体”的通用路径，�
 
 ```json
 {
-  "prompt": "<|begin▁of▁sentence|><|System|>原 system / developer\n\nФОРМАТ ВЫЗОВА ИНСТРУМЕНТА - СЛЕДУЙ ТОЧНО: ...<|end▁of▁instructions|><|User|>Продолжай с последнего состояния из приложенного контекста DS2API_HISTORY.txt. Считай его текущим рабочим состоянием и напрямую отвечай на последний запрос пользователя на китайском языке. Доступные описания инструментов и схемы параметров приложены в DS2API_TOOLS.txt; используй только эти инструменты и следуй правилам формата вызова инструментов в этом промпте.<|Assistant|>",
+  "prompt": "<|begin|of|sentence|><|System|>原 system / developer\n\nФОРМАТ ВЫЗОВА ИНСТРУМЕНТА - СЛЕДУЙ ТОЧНО: ...<|end|of|instructions|><|User|>Продолжай с последнего состояния из приложенного контекста DS2API_HISTORY.txt. Считай его текущим рабочим состоянием и напрямую отвечай на последний запрос пользователя на китайском языке. Доступные описания инструментов и схемы параметров приложены в DS2API_TOOLS.txt; используй только эти инструменты и следуй правилам формата вызова инструментов в этом промпте.<|Assistant|>",
   "ref_file_ids": [
     "file-ds2api-history",
     "file-ds2api-tools",

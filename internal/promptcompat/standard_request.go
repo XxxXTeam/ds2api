@@ -12,7 +12,9 @@ type StandardRequest struct {
 	PromptTokenText         string
 	CurrentInputFileApplied bool
 	CurrentInputFileID      string
+	CurrentInputFileURL     string
 	CurrentToolsFileID      string
+	CurrentToolsFileURL     string
 	ToolsRaw                any
 	FinalPrompt             string
 	ToolNames               []string

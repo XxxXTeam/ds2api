@@ -30,6 +30,7 @@ import (
 	"ds2api/internal/httpapi/openai/responses"
 	"ds2api/internal/httpapi/openai/shared"
 	"ds2api/internal/httpapi/requestbody"
+	"ds2api/internal/localfiles"
 	"ds2api/internal/webui"
 )
 
@@ -96,6 +97,9 @@ func NewApp() (*App, error) {
 	r.Head("/healthz", healthzHandler)
 	r.Get("/readyz", readyzHandler)
 	r.Head("/readyz", readyzHandler)
+	r.Get("/__ds2api/files/{file_id}", func(w http.ResponseWriter, req *http.Request) {
+		localfiles.DefaultStore.ServeHTTP(w, req, chi.URLParam(req, "file_id"))
+	})
 	r.Get("/v1/models", modelsHandler.ListModels)
 	r.Get("/v1/models/{model_id}", modelsHandler.GetModel)
 	r.Post("/v1/chat/completions", chatHandler.ChatCompletions)

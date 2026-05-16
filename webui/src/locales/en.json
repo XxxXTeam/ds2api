@@ -398,6 +398,8 @@
         "currentInputFileDesc": "Enabled by default. Once the character threshold is reached, upload the full context as a DS2API_HISTORY.txt context file.",
         "currentInputFileMinChars": "Current input threshold (characters)",
         "currentInputFileHelp": "Default is 0, which uses independent split for any non-empty input.",
+        "deepseekFileBaseUrl": "DeepSeek Pro file URL domain",
+        "deepseekFileBaseUrlHelp": "Required for Pro local file context. Use the public base URL that DeepSeek can access; DS2API appends /__ds2api/files/{id}.",
         "modelTitle": "Model mapping",
         "modelAliases": "Global model aliases (JSON)",
         "autoDeleteTitle": "Session Cleanup Policy",

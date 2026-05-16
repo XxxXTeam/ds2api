@@ -48,6 +48,10 @@ func DeepSeekRangersIDFromEnv() string {
 	return strings.TrimSpace(os.Getenv("DS2API_DEEPSEEK_RANGERS_ID"))
 }
 
+func DeepSeekFileBaseURLFromEnv() string {
+	return strings.TrimRight(strings.TrimSpace(os.Getenv("DS2API_DEEPSEEK_FILE_BASE_URL")), "/")
+}
+
 func (s *Store) DeepSeekRangersID() string {
 	if s == nil {
 		return DeepSeekRangersIDFromEnv()
@@ -59,6 +63,19 @@ func (s *Store) DeepSeekRangersID() string {
 		return value
 	}
 	return DeepSeekRangersIDFromEnv()
+}
+
+func (s *Store) DeepSeekFileBaseURL() string {
+	if s == nil {
+		return DeepSeekFileBaseURLFromEnv()
+	}
+	s.mu.RLock()
+	value := strings.TrimRight(strings.TrimSpace(s.cfg.DeepSeek.FileBaseURL), "/")
+	s.mu.RUnlock()
+	if value != "" {
+		return value
+	}
+	return DeepSeekFileBaseURLFromEnv()
 }
 
 func (s *Store) AutoDeleteMode() string {

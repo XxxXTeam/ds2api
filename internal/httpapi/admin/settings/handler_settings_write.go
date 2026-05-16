@@ -17,7 +17,7 @@ func (h *Handler) updateSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	adminCfg, runtimeCfg, responsesCfg, embeddingsCfg, autoDeleteCfg, currentInputCfg, thinkingInjCfg, aliasMap, err := parseSettingsUpdateRequest(req)
+	adminCfg, runtimeCfg, responsesCfg, embeddingsCfg, deepSeekCfg, autoDeleteCfg, currentInputCfg, thinkingInjCfg, aliasMap, err := parseSettingsUpdateRequest(req)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"detail": err.Error()})
 		return
@@ -30,6 +30,7 @@ func (h *Handler) updateSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	currentInputEnabledSet := hasNestedSettingsKey(req, "current_input_file", "enabled")
 	currentInputMinCharsSet := hasNestedSettingsKey(req, "current_input_file", "min_chars")
+	deepSeekFileBaseURLSet := hasNestedSettingsKey(req, "deepseek", "file_base_url")
 	thinkingInjectionEnabledSet := hasNestedSettingsKey(req, "thinking_injection", "enabled")
 	thinkingInjectionPromptSet := hasNestedSettingsKey(req, "thinking_injection", "prompt")
 
@@ -58,6 +59,9 @@ func (h *Handler) updateSettings(w http.ResponseWriter, r *http.Request) {
 		}
 		if embeddingsCfg != nil && strings.TrimSpace(embeddingsCfg.Provider) != "" {
 			c.Embeddings.Provider = strings.TrimSpace(embeddingsCfg.Provider)
+		}
+		if deepSeekCfg != nil && deepSeekFileBaseURLSet {
+			c.DeepSeek.FileBaseURL = strings.TrimRight(strings.TrimSpace(deepSeekCfg.FileBaseURL), "/")
 		}
 		if autoDeleteCfg != nil {
 			c.AutoDelete.Mode = autoDeleteCfg.Mode

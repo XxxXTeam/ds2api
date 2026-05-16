@@ -58,7 +58,8 @@
     "provider": "deterministic"
   },
   "deepseek": {
-    "rangers_id": ""
+    "rangers_id": "",
+    "file_base_url": ""
   },
   "admin": {
     "jwt_expire_hours": 24

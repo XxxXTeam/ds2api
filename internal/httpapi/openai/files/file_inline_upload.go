@@ -44,9 +44,14 @@ type inlineUploadState struct {
 	handler         *Handler
 	auth            *auth.RequestAuth
 	modelType       string
-	uploadedByID    map[string]string
+	uploadedByID    map[string]inlineUploadResult
 	uploadCount     int
 	inlineFileBytes int
+}
+
+type inlineUploadResult struct {
+	ID  string
+	URL string
 }
 
 type inlineDecodedFile struct {
@@ -73,7 +78,7 @@ func (h *Handler) PreprocessInlineFileInputs(ctx context.Context, a *auth.Reques
 		handler:      h,
 		auth:         a,
 		modelType:    modelType,
-		uploadedByID: map[string]string{},
+		uploadedByID: map[string]inlineUploadResult{},
 	}
 	for _, key := range []string{"messages", "input", "attachments"} {
 		if raw, ok := req[key]; ok {
@@ -153,15 +158,18 @@ func (s *inlineUploadState) tryUploadBlock(block map[string]any) (map[string]any
 		err := fmt.Errorf("exceeded maximum of %d inline files per request", maxInlineFilesPerRequest)
 		return nil, true, &inlineFileUploadError{status: http.StatusBadRequest, message: err.Error(), err: err}
 	}
-	fileID, err := s.uploadInlineFile(decoded)
+	uploaded, err := s.uploadInlineFile(decoded)
 	if err != nil {
 		return nil, true, &inlineFileUploadError{status: http.StatusInternalServerError, message: "Failed to upload inline file.", err: err}
 	}
 	s.uploadCount++
 	s.inlineFileBytes += len(decoded.Data)
+	if strings.TrimSpace(uploaded.URL) != "" {
+		return inlineURLReplacement(decoded, uploaded.URL), true, nil
+	}
 	replacement := map[string]any{
 		"type":    decoded.ReplacementType,
-		"file_id": fileID,
+		"file_id": uploaded.ID,
 	}
 	if decoded.Filename != "" {
 		replacement["filename"] = decoded.Filename
@@ -172,11 +180,11 @@ func (s *inlineUploadState) tryUploadBlock(block map[string]any) (map[string]any
 	return replacement, true, nil
 }
 
-func (s *inlineUploadState) uploadInlineFile(file inlineDecodedFile) (string, error) {
+func (s *inlineUploadState) uploadInlineFile(file inlineDecodedFile) (inlineUploadResult, error) {
 	sum := sha256.Sum256(append([]byte(file.ContentType+"\x00"+file.Filename+"\x00"), file.Data...))
 	cacheKey := fmt.Sprintf("%x", sum[:])
-	if fileID, ok := s.uploadedByID[cacheKey]; ok && strings.TrimSpace(fileID) != "" {
-		return fileID, nil
+	if uploaded, ok := s.uploadedByID[cacheKey]; ok && strings.TrimSpace(uploaded.ID) != "" {
+		return uploaded, nil
 	}
 	contentType := strings.TrimSpace(file.ContentType)
 	if contentType == "" {
@@ -189,14 +197,34 @@ func (s *inlineUploadState) uploadInlineFile(file inlineDecodedFile) (string, er
 		Data:        file.Data,
 	}, 3)
 	if err != nil {
-		return "", err
+		return inlineUploadResult{}, err
 	}
 	fileID := strings.TrimSpace(result.ID)
 	if fileID == "" {
-		return "", fmt.Errorf("upload succeeded without file id")
+		return inlineUploadResult{}, fmt.Errorf("upload succeeded without file id")
 	}
-	s.uploadedByID[cacheKey] = fileID
-	return fileID, nil
+	uploaded := inlineUploadResult{ID: fileID, URL: strings.TrimSpace(result.URL)}
+	s.uploadedByID[cacheKey] = uploaded
+	return uploaded, nil
+}
+
+func inlineURLReplacement(file inlineDecodedFile, publicURL string) map[string]any {
+	label := "file"
+	if file.ReplacementType == "input_image" {
+		label = "image"
+	}
+	name := strings.TrimSpace(file.Filename)
+	if name == "" {
+		name = label
+	}
+	text := fmt.Sprintf("Attached %s %q is available at: %s\nRead this URL as the uploaded file content.", label, name, publicURL)
+	if contentType := strings.TrimSpace(file.ContentType); contentType != "" {
+		text = fmt.Sprintf("Attached %s %q (%s) is available at: %s\nRead this URL as the uploaded file content.", label, name, contentType, publicURL)
+	}
+	return map[string]any{
+		"type": "input_text",
+		"text": text,
+	}
 }
 
 func decodeOpenAIInlineFileBlock(block map[string]any) (inlineDecodedFile, bool, error) {

@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"ds2api/internal/auth"
+	"ds2api/internal/config"
+	"ds2api/internal/localfiles"
 	powpkg "ds2api/pow"
 )
 
@@ -177,6 +179,36 @@ func TestUploadFileUsesUploadTargetPowAndMultipartHeaders(t *testing.T) {
 	}
 	if !strings.Contains(seenBody, `name="file"; filename="demo.txt"`) {
 		t.Fatalf("expected file part in upload body: %q", seenBody)
+	}
+}
+
+func TestUploadFileStoresExpertFileLocallyWithPublicURL(t *testing.T) {
+	t.Setenv("DS2API_CONFIG_JSON", `{"deepseek":{"file_base_url":"https://public.example/base/"}}`)
+	store := config.LoadStore()
+	client := &Client{Store: store}
+
+	result, err := client.UploadFile(context.Background(), &auth.RequestAuth{AccountID: "acct-1"}, UploadFileRequest{
+		Filename:    "history.txt",
+		ContentType: "text/plain",
+		Purpose:     "assistants",
+		ModelType:   "expert",
+		Data:        []byte("hello pro context"),
+	}, 1)
+	if err != nil {
+		t.Fatalf("UploadFile error: %v", err)
+	}
+	if !localfiles.IsLocalID(result.ID) {
+		t.Fatalf("expected local file id, got %#v", result)
+	}
+	if result.URL != "https://public.example/base/__ds2api/files/"+result.ID {
+		t.Fatalf("unexpected public URL: %#v", result)
+	}
+	stored, ok := localfiles.DefaultStore.Get(result.ID)
+	if !ok {
+		t.Fatalf("expected local file to be stored")
+	}
+	if string(stored.Data) != "hello pro context" {
+		t.Fatalf("unexpected stored data: %q", string(stored.Data))
 	}
 }
 

@@ -12,6 +12,7 @@ import (
 
 	"ds2api/internal/auth"
 	"ds2api/internal/config"
+	"ds2api/internal/localfiles"
 )
 
 const (
@@ -73,6 +74,31 @@ func (c *Client) FetchUploadedFile(ctx context.Context, a *auth.RequestAuth, fil
 	fileID = strings.TrimSpace(fileID)
 	if fileID == "" {
 		return nil, errors.New("file id is required")
+	}
+	if localfiles.IsLocalID(fileID) {
+		file, ok := localfiles.DefaultStore.Get(fileID)
+		if !ok {
+			return nil, ErrUploadFileNotFound
+		}
+		publicURL := ""
+		baseURL := ""
+		if c != nil && c.Store != nil {
+			baseURL = c.Store.DeepSeekFileBaseURL()
+		} else {
+			baseURL = config.DeepSeekFileBaseURLFromEnv()
+		}
+		if urlValue, err := localfiles.PublicURL(baseURL, file.ID); err == nil {
+			publicURL = urlValue
+		}
+		return &UploadFileResult{
+			ID:          file.ID,
+			Filename:    file.Filename,
+			ContentType: file.ContentType,
+			Bytes:       int64(len(file.Data)),
+			Status:      "processed",
+			URL:         publicURL,
+			Raw:         map[string]any{"local": true, "url": publicURL},
+		}, nil
 	}
 	clients := c.requestClientsForAuth(ctx, a)
 	reqURL := dsprotocol.DeepSeekFetchFilesURL + "?file_ids=" + url.QueryEscape(fileID)

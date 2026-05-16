@@ -453,6 +453,7 @@ data: [DONE]
 - 请求必须为 `multipart/form-data`，否则返回 `400`。
 - 请求体总大小上限 **100 MiB**（超限返回 `413`）。
 - 成功返回 OpenAI `file` 对象（`id/object/bytes/filename/purpose/status` 等字段），并附带 `account_id` 便于定位来源账号。
+- 当上传目标解析为 DeepSeek Pro / `model_type=expert` 时，不再上传到 DeepSeek 文件接口；服务会把文件临时保存在本地内存，并返回 `url` 字段。该 URL 使用后台设置里的 `deepseek.file_base_url` 作为主域名，再拼接 `/__ds2api/files/{id}`，因此该主域名必须能被 DeepSeek 访问。
 
 ### `GET /v1/files/{file_id}`
 
@@ -773,6 +774,7 @@ data: {"type":"message_stop"}
 - `admin`（`has_password_hash`、`jwt_expire_hours`、`jwt_valid_after_unix`、`default_password_warning`）
 - `runtime`（`account_max_inflight`、`account_max_queue`、`global_max_inflight`、`token_refresh_interval_hours`）
 - `responses` / `embeddings`
+- `deepseek`（`file_base_url`，用于 DeepSeek Pro 本地文件 URL 主域名）
 - `auto_delete`（`mode`：`none` / `single` / `all`；旧配置 `sessions=true` 仍按 `all` 处理）
 - `current_input_file`（`enabled` 默认返回 `true`、`min_chars`）
 - `thinking_injection`（`enabled` 默认返回 `true`、`prompt`、`default_prompt`）
@@ -788,6 +790,7 @@ data: {"type":"message_stop"}
 - `runtime.account_max_inflight` / `runtime.account_max_queue` / `runtime.global_max_inflight` / `runtime.token_refresh_interval_hours`
 - `responses.store_ttl_seconds`
 - `embeddings.provider`
+- `deepseek.file_base_url`
 - `auto_delete.mode`
 - `current_input_file.enabled` / `current_input_file.min_chars`
 - `thinking_injection.enabled` / `thinking_injection.prompt`

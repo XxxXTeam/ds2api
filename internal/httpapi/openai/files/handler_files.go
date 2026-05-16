@@ -184,5 +184,8 @@ func buildOpenAIFileObject(result *dsclient.UploadFileResult) map[string]any {
 	if result.AccountID != "" {
 		obj["account_id"] = result.AccountID
 	}
+	if strings.TrimSpace(result.URL) != "" {
+		obj["url"] = strings.TrimSpace(result.URL)
+	}
 	return obj
 }

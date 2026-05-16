@@ -731,7 +731,7 @@ test('parseChunkForContent strips fullwidth-delimited leaked control markers fro
   const fw = '\uff5c';
   const chunk = {
     p: 'response/content',
-    v: `<${fw}begin▁of▁sentence${fw}>A<${fw}▁of▁thought${fw}>B<${fw} end_of_sentence ${fw}>C`,
+    v: `<${fw}begin|of|sentence${fw}>A<${fw}▁of▁thought${fw}>B<${fw} end_of_sentence ${fw}>C`,
   };
   const parsed = parseChunkForContent(chunk, false, 'text');
   assert.equal(parsed.finished, false);

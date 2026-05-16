@@ -32,16 +32,16 @@ func TestMessagesPrepareUsesTurnSuffixes(t *testing.T) {
 		{"role": "assistant", "content": "Answer"},
 	}
 	got := MessagesPrepare(messages)
-	if !strings.HasPrefix(got, "<|begin▁of▁sentence|>") {
+	if !strings.HasPrefix(got, "<|begin|of|sentence|>") {
 		t.Fatalf("expected begin-of-sentence marker, got %q", got)
 	}
-	if !strings.Contains(got, "<|System|>") || !strings.Contains(got, "<|end▁of▁instructions|>") || !strings.Contains(got, "System rule") {
+	if !strings.Contains(got, "<|System|>") || !strings.Contains(got, "<|end|of|instructions|>") || !strings.Contains(got, "System rule") {
 		t.Fatalf("expected system instructions to remain present, got %q", got)
 	}
 	if !strings.Contains(got, "<|User|>Question") {
 		t.Fatalf("expected user question, got %q", got)
 	}
-	if !strings.Contains(got, "<|Assistant|>Answer<|end▁of▁sentence|>") {
+	if !strings.Contains(got, "<|Assistant|>Answer<|end|of|sentence|>") {
 		t.Fatalf("expected assistant sentence suffix, got %q", got)
 	}
 	if strings.Contains(got, "<think>") || strings.Contains(got, "</think>") {

@@ -17,6 +17,7 @@ import (
 	"ds2api/internal/auth"
 	"ds2api/internal/config"
 	trans "ds2api/internal/deepseek/transport"
+	"ds2api/internal/localfiles"
 )
 
 type UploadFileRequest struct {
@@ -28,15 +29,17 @@ type UploadFileRequest struct {
 }
 
 type UploadFileResult struct {
-	ID         string
-	Filename   string
-	Bytes      int64
-	Status     string
-	Purpose    string
-	AccountID  string
-	IsImage    bool
-	Raw        map[string]any
-	RawHeaders http.Header
+	ID          string
+	Filename    string
+	ContentType string
+	Bytes       int64
+	Status      string
+	Purpose     string
+	AccountID   string
+	IsImage     bool
+	URL         string
+	Raw         map[string]any
+	RawHeaders  http.Header
 }
 
 func (c *Client) UploadFile(ctx context.Context, a *auth.RequestAuth, req UploadFileRequest, maxAttempts int) (*UploadFileResult, error) {
@@ -56,6 +59,9 @@ func (c *Client) UploadFile(ctx context.Context, a *auth.RequestAuth, req Upload
 	}
 	purpose := strings.TrimSpace(req.Purpose)
 	modelType := strings.ToLower(strings.TrimSpace(req.ModelType))
+	if modelType == "expert" {
+		return c.storeLocalExpertFile(filename, contentType, purpose, req.Data, a)
+	}
 	body, contentTypeHeader, err := buildUploadMultipartBody(filename, contentType, req.Data)
 	if err != nil {
 		return nil, err
@@ -166,6 +172,41 @@ func (c *Client) UploadFile(ctx context.Context, a *auth.RequestAuth, req Upload
 		return nil, &RequestFailure{Op: "upload file", Kind: lastFailureKind, Message: lastFailureMessage}
 	}
 	return nil, errors.New("upload file failed")
+}
+
+func (c *Client) storeLocalExpertFile(filename, contentType, purpose string, data []byte, a *auth.RequestAuth) (*UploadFileResult, error) {
+	baseURL := ""
+	if c != nil && c.Store != nil {
+		baseURL = c.Store.DeepSeekFileBaseURL()
+	} else {
+		baseURL = config.DeepSeekFileBaseURLFromEnv()
+	}
+	if strings.TrimSpace(baseURL) == "" {
+		return nil, errors.New("deepseek.file_base_url is required for DeepSeek Pro local file URLs")
+	}
+	file, err := localfiles.DefaultStore.Put(filename, contentType, data)
+	if err != nil {
+		return nil, err
+	}
+	publicURL, err := localfiles.PublicURL(baseURL, file.ID)
+	if err != nil {
+		return nil, err
+	}
+	result := &UploadFileResult{
+		ID:          file.ID,
+		Filename:    file.Filename,
+		Bytes:       int64(len(file.Data)),
+		Status:      "processed",
+		Purpose:     purpose,
+		URL:         publicURL,
+		Raw:         map[string]any{"local": true, "url": publicURL},
+		RawHeaders:  make(http.Header),
+		ContentType: file.ContentType,
+	}
+	if a != nil {
+		result.AccountID = a.AccountID
+	}
+	return result, nil
 }
 
 func buildUploadMultipartBody(filename, contentType string, data []byte) ([]byte, string, error) {

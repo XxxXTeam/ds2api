@@ -42,6 +42,23 @@ export default function CurrentInputFileSection({ t, form, setForm }) {
                     />
                     <p className="text-xs text-muted-foreground">{t('settings.currentInputFileHelp')}</p>
                 </label>
+                <label className="text-sm space-y-2 md:col-span-2">
+                    <span className="text-muted-foreground">{t('settings.deepseekFileBaseUrl')}</span>
+                    <input
+                        type="url"
+                        value={form.deepseek?.file_base_url || ''}
+                        onChange={(e) => setForm((prev) => ({
+                            ...prev,
+                            deepseek: {
+                                ...prev.deepseek,
+                                file_base_url: e.target.value,
+                            },
+                        }))}
+                        placeholder="https://your-domain.example"
+                        className="w-full bg-background border border-border rounded-lg px-3 py-2"
+                    />
+                    <p className="text-xs text-muted-foreground">{t('settings.deepseekFileBaseUrlHelp')}</p>
+                </label>
             </div>
         </div>
     )

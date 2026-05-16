@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 )
 
@@ -19,6 +20,9 @@ func ValidateConfig(c Config) error {
 		return err
 	}
 	if err := ValidateEmbeddingsConfig(c.Embeddings); err != nil {
+		return err
+	}
+	if err := ValidateDeepSeekConfig(c.DeepSeek); err != nil {
 		return err
 	}
 	if err := ValidateAutoDeleteConfig(c.AutoDelete); err != nil {
@@ -108,6 +112,26 @@ func ValidateResponsesConfig(responses ResponsesConfig) error {
 
 func ValidateEmbeddingsConfig(embeddings EmbeddingsConfig) error {
 	return ValidateTrimmedString("embeddings.provider", embeddings.Provider, false)
+}
+
+func ValidateDeepSeekConfig(deepseek DeepSeekConfig) error {
+	if err := ValidateTrimmedString("deepseek.rangers_id", deepseek.RangersID, false); err != nil {
+		return err
+	}
+	baseURL := strings.TrimSpace(deepseek.FileBaseURL)
+	if baseURL == "" {
+		return nil
+	}
+	u, err := url.Parse(baseURL)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return fmt.Errorf("deepseek.file_base_url must be an absolute http(s) URL")
+	}
+	switch strings.ToLower(u.Scheme) {
+	case "http", "https":
+		return nil
+	default:
+		return fmt.Errorf("deepseek.file_base_url must use http or https")
+	}
 }
 
 func ValidateAutoDeleteConfig(autoDelete AutoDeleteConfig) error {

@@ -15,6 +15,7 @@ const DEFAULT_FORM = {
     runtime: { account_max_inflight: 2, account_max_queue: 10, global_max_inflight: 10, token_refresh_interval_hours: 6 },
     responses: { store_ttl_seconds: 900 },
     embeddings: { provider: '' },
+    deepseek: { file_base_url: '' },
     auto_delete: { mode: 'none' },
     current_input_file: { enabled: true, min_chars: 0 },
     thinking_injection: { enabled: true, prompt: '', default_prompt: '' },
@@ -65,6 +66,9 @@ function fromServerForm(data) {
         embeddings: {
             provider: data.embeddings?.provider || '',
         },
+        deepseek: {
+            file_base_url: data.deepseek?.file_base_url || '',
+        },
         auto_delete: {
             mode: normalizeAutoDeleteMode(data.auto_delete),
         },
@@ -93,6 +97,7 @@ function toServerPayload(form) {
         },
         responses: { store_ttl_seconds: Number(form.responses.store_ttl_seconds) },
         embeddings: { provider: String(form.embeddings.provider || '').trim() },
+        deepseek: { file_base_url: String(form.deepseek?.file_base_url || '').trim().replace(/\/+$/, '') },
         auto_delete: { mode: normalizeAutoDeleteMode(form.auto_delete) },
         current_input_file: {
             enabled: currentInputFileEnabled,

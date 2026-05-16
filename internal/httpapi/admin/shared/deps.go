@@ -32,6 +32,7 @@ type ConfigStore interface {
 	RuntimeAccountMaxQueue(defaultSize int) int
 	RuntimeGlobalMaxInflight(defaultSize int) int
 	RuntimeTokenRefreshIntervalHours() int
+	DeepSeekFileBaseURL() string
 	AutoDeleteMode() string
 	CurrentInputFileEnabled() bool
 	CurrentInputFileMinChars() int
